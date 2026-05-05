@@ -2,6 +2,10 @@
 library;
 
 export 'src/constants/ui_assets.dart';
+export 'src/models/location.dart';
+export 'src/models/order_item_model.dart';
+export 'src/models/order_model.dart';
+export 'src/models/order_status.dart';
 export 'src/theme/app_colors.dart';
 export 'src/theme/app_fonts.dart';
 export 'src/theme/app_sizes.dart';
