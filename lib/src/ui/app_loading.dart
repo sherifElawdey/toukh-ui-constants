@@ -49,6 +49,8 @@ class AppLoadingOverlay extends StatelessWidget {
 abstract final class AppLoading {
   const AppLoading._();
 
+  /// Shows loading via a [DialogRoute] on the root navigator — same overlay stack
+  /// pipeline as [showDialog], with a modal barrier and centered [AppLoadingMark].
   static Future<T> run<T>(
     BuildContext context,
     Future<T> Function() task, {
@@ -57,23 +59,26 @@ abstract final class AppLoading {
     if (!context.mounted) {
       throw StateError('AppLoading.run: context is not mounted');
     }
-    final overlay = Overlay.maybeOf(context, rootOverlay: true);
-    if (overlay == null) {
-      throw StateError('AppLoading.run: root overlay is unavailable');
-    }
 
-    final entry = OverlayEntry(
-      builder: (_) => _AppLoadingLayer(
+    final navigator = Navigator.of(context, rootNavigator: true);
+
+    final route = DialogRoute<void>(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      barrierColor: AppColors.scrim,
+      builder: (_) => _AppLoadingDialogBody(
         barrierDismissible: barrierDismissible,
       ),
     );
-    overlay.insert(entry);
+
+    navigator.push(route);
     await WidgetsBinding.instance.endOfFrame;
+
     try {
       return await task();
     } finally {
-      if (entry.mounted) {
-        entry.remove();
+      if (route.isActive) {
+        navigator.removeRoute(route);
       }
     }
   }
@@ -87,8 +92,8 @@ extension AppLoadingContext on BuildContext {
       AppLoading.run(this, task, barrierDismissible: barrierDismissible);
 }
 
-class _AppLoadingLayer extends StatelessWidget {
-  const _AppLoadingLayer({
+class _AppLoadingDialogBody extends StatelessWidget {
+  const _AppLoadingDialogBody({
     required this.barrierDismissible,
   });
 
@@ -98,15 +103,7 @@ class _AppLoadingLayer extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: barrierDismissible,
-      child: Material(
-        type: MaterialType.transparency,
-        child: SizedBox.expand(
-          child: ColoredBox(
-            color: AppColors.scrim,
-            child: const Center(child: AppLoadingMark()),
-          ),
-        ),
-      ),
+      child: const Center(child: AppLoadingMark()),
     );
   }
 }
