@@ -38,7 +38,9 @@ class AppLoadingOverlay extends StatelessWidget {
       child: AbsorbPointer(
         child: Material(
           type: MaterialType.transparency,
-          child: SizedBox.expand(
+          child: SizedBox(
+            width: MediaQuery.sizeOf(context).width,
+            height: MediaQuery.sizeOf(context).height,
             child: ColoredBox(
               color: AppColors.scrim,
               child: const Center(child: AppLoadingMark()),
