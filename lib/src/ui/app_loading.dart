@@ -33,13 +33,13 @@ class AppLoadingOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      height: MediaQuery.sizeOf(context).height+200,
+      height: MediaQuery.sizeOf(context).height,
       width: MediaQuery.sizeOf(context).width,
       child: Material(
         type: MaterialType.transparency,
         child: SizedBox(
           width: MediaQuery.sizeOf(context).width,
-          height: MediaQuery.sizeOf(context).height+200,
+          height: MediaQuery.sizeOf(context).height,
           child: ColoredBox(
             color: AppColors.scrim,
             child: const Center(child: AppLoadingMark()),
