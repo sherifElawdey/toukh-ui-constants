@@ -32,7 +32,9 @@ class AppLoadingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned.fill(
+    return Positioned(
+      height: MediaQuery.sizeOf(context).height,
+      width: MediaQuery.sizeOf(context).width,
       child: AbsorbPointer(
         child: Material(
           type: MaterialType.transparency,
@@ -59,21 +61,23 @@ abstract final class AppLoading {
     if (!context.mounted) {
       throw StateError('AppLoading.run: context is not mounted');
     }
-    final navigator = Navigator.of(context, rootNavigator: true);
-    showDialog<void>(
-      context: context,
-      barrierDismissible: barrierDismissible,
-      barrierColor: AppColors.transparent,
-      useRootNavigator: true,
-      useSafeArea: false,
-      builder: (_) => const _AppLoadingLayer(),
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) {
+      throw StateError('AppLoading.run: root overlay is unavailable');
+    }
+
+    final entry = OverlayEntry(
+      builder: (_) => _AppLoadingLayer(
+        barrierDismissible: barrierDismissible,
+      ),
     );
+    overlay.insert(entry);
     await WidgetsBinding.instance.endOfFrame;
     try {
       return await task();
     } finally {
-      if (navigator.mounted) {
-        navigator.pop();
+      if (entry.mounted) {
+        entry.remove();
       }
     }
   }
@@ -88,13 +92,17 @@ extension AppLoadingContext on BuildContext {
 }
 
 class _AppLoadingLayer extends StatelessWidget {
-  const _AppLoadingLayer();
+  const _AppLoadingLayer({
+    required this.barrierDismissible,
+  });
+
+  final bool barrierDismissible;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return PopScope(
-      canPop: false,
+      canPop: barrierDismissible,
       child: Material(
         type: MaterialType.transparency,
         child: SizedBox(
