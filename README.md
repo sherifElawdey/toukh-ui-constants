@@ -41,3 +41,20 @@ dependencies:
 ## Assets
 
 This package bundles `assets/branding/app_logo.png` for `AppLogoLoading` and the default image on `AppSuccessScreen`. Consuming apps still declare their own fonts for **Cairo** under `flutter: fonts:` using family name **`Cairo`** (matching `AppFonts.family`).
+
+## Twilio Verify (HTTP client)
+
+`TwilioVerifyClient` calls Twilio Verify v2 with HTTP Basic auth. **Do not commit** Account SID, Auth Token, or Verify Service SID. If a credential was ever pasted into chat or a PR, **rotate the Auth Token** in the [Twilio Console](https://www.twilio.com/console).
+
+Apps pass secrets at build time, for example:
+
+```bash
+flutter run \
+  --dart-define=TWILIO_ACCOUNT_SID=ACxxxxxxxx \
+  --dart-define=TWILIO_AUTH_TOKEN=xxxxxxxx \
+  --dart-define=TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxx
+```
+
+When all three are non-empty, consumer/provider/delivery apps register `TwilioVerifyOtpRepository`; otherwise they fall back to an in-memory stub. In the Twilio Console, configure your Verify Service for **WhatsApp** delivery if you want WhatsApp-first OTP; otherwise the client falls back to SMS.
+
+**Security note:** calling Verify from the mobile app is convenient but credentials can be extracted from the app binary. For production hardening, prefer a backend or Cloud Function that holds the Auth Token.
