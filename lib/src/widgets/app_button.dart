@@ -103,6 +103,7 @@ class _AppButtonCore extends StatelessWidget {
     this.semanticsLabel,
     this.foregroundColor,
     this.trailingIcon,
+    this.alignment,
   });
 
   final _AppButtonVariant variant;
@@ -121,6 +122,7 @@ class _AppButtonCore extends StatelessWidget {
   final bool underlineLabel;
   final String? semanticsLabel;
   final Color? foregroundColor;
+  final MainAxisAlignment? alignment;
 
   bool get _interactive {
     if (status == AppButtonStatus.disabled || status == AppButtonStatus.loading) {
@@ -288,7 +290,7 @@ class _AppButtonCore extends StatelessWidget {
         child: Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: alignment ?? MainAxisAlignment.center,
             children: [
               if (status == AppButtonStatus.loading) ...[
                 SizedBox(
@@ -496,6 +498,7 @@ class AppTextButton extends StatelessWidget {
     this.foregroundColor,
     this.trailingIcon,
     this.underlineLabel = false,
+    this.alignment,
   });
 
   final String text;
@@ -513,6 +516,7 @@ class AppTextButton extends StatelessWidget {
   final String? semanticsLabel;
   final Color? foregroundColor;
   final bool underlineLabel;
+  final MainAxisAlignment? alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -533,6 +537,7 @@ class AppTextButton extends StatelessWidget {
       underlineLabel: underlineLabel,
       semanticsLabel: semanticsLabel,
       foregroundColor: foregroundColor,
+      alignment: alignment,
     );
   }
 }
