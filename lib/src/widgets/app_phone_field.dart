@@ -58,6 +58,7 @@ class AppPhoneField extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Text(
             String.fromCharCodes(const [0x1F1EA, 0x1F1EC]),
@@ -100,7 +101,7 @@ class AppPhoneField extends StatelessWidget {
       enabled: enabled,
       margin: EdgeInsets.zero,
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.spaceXs,
+        horizontal: 0,
         vertical: AppSizes.spaceBase,
       ),
       errorText: errorText,
@@ -111,7 +112,7 @@ class AppPhoneField extends StatelessWidget {
       ],
       prefixIcon: prefix,
       prefixIconConstraints: const BoxConstraints(
-        minWidth: 112,
+        // minWidth: 112,
         maxHeight: 48,
       ),
       onFieldSubmitted: onFieldSubmitted,
