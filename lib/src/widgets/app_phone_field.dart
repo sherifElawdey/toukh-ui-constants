@@ -99,7 +99,10 @@ class AppPhoneField extends StatelessWidget {
       focusNode: focusNode,
       enabled: enabled,
       margin: EdgeInsets.zero,
-
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.spaceXs,
+        vertical: AppSizes.spaceBase,
+      ),
       errorText: errorText,
       autofillHints: autofillHints,
       inputFormatters: [
