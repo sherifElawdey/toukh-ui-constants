@@ -17,6 +17,7 @@ export 'src/twilio/twilio_verify_client.dart';
 export 'src/twilio/twilio_verify_config.dart';
 export 'src/ui/app_loading.dart';
 export 'src/ui/app_snack.dart';
+export 'src/widgets/app_button.dart';
 export 'src/widgets/app_inputs.dart';
 export 'src/widgets/app_logo_loading.dart';
 export 'src/widgets/app_success_screen.dart';

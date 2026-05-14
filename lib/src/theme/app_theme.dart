@@ -68,6 +68,24 @@ ThemeData buildAppTheme() {
         ),
       ),
     ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.secondColor,
+        side: BorderSide(color: AppColors.borderSubtle, width: 1.5),
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSizes.spaceBase,
+          horizontal: AppSizes.space2xl,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        ),
+        textStyle: const TextStyle(
+          fontFamily: AppFonts.family,
+          fontSize: AppSizes.fontBody,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.thirdColor.withValues(alpha: 0.4),
@@ -162,6 +180,24 @@ ThemeData buildAppDarkTheme() {
         textStyle: const TextStyle(
           fontFamily: AppFonts.family,
           fontSize: AppSizes.fontLabel,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.appColor,
+        side: BorderSide(color: AppColors.borderSubtle, width: 1.5),
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSizes.spaceBase,
+          horizontal: AppSizes.space2xl,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        ),
+        textStyle: const TextStyle(
+          fontFamily: AppFonts.family,
+          fontSize: AppSizes.fontBody,
           fontWeight: FontWeight.w600,
         ),
       ),
