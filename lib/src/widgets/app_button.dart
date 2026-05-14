@@ -287,51 +287,49 @@ class _AppButtonCore extends StatelessWidget {
       constraints: BoxConstraints(minHeight: spec.minHeight),
       child: Padding(
         padding: effectivePadding,
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: alignment ?? MainAxisAlignment.center,
-            children: [
-              if (status == AppButtonStatus.loading) ...[
-                SizedBox(
-                  width: spec.iconSize,
-                  height: spec.iconSize,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: colors.foreground,
-                  ),
-                ),
-                if (text.isNotEmpty) SizedBox(width: AppSizes.spaceSm),
-              ] else if (icon != null) ...[
-                Icon(icon, size: spec.iconSize, color: colors.foreground),
-                if (text.isNotEmpty) SizedBox(width: AppSizes.spaceSm),
-              ],
-              if (text.isNotEmpty)
-                Flexible(
-                  child: CustomText(
-                    text,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    fontSize: spec.fontSize,
-                    fontWeight: FontWeight.w600,
-                    color: colors.foreground,
-                    textDecoration:
-                        underlineLabel ? TextDecoration.underline : null,
-                    style: const TextStyle(fontFamily: AppFonts.family),
-                  ),
-                ),
-              if (trailingIcon != null &&
-                  status != AppButtonStatus.loading) ...[
-                if (text.isNotEmpty) SizedBox(width: AppSizes.spaceSm),
-                Icon(
-                  trailingIcon,
-                  size: spec.iconSize,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: alignment ?? MainAxisAlignment.center,
+          children: [
+            if (status == AppButtonStatus.loading) ...[
+              SizedBox(
+                width: spec.iconSize,
+                height: spec.iconSize,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
                   color: colors.foreground,
                 ),
-              ],
+              ),
+              if (text.isNotEmpty) SizedBox(width: AppSizes.spaceSm),
+            ] else if (icon != null) ...[
+              Icon(icon, size: spec.iconSize, color: colors.foreground),
+              if (text.isNotEmpty) SizedBox(width: AppSizes.spaceSm),
             ],
-          ),
+            if (text.isNotEmpty)
+              Flexible(
+                child: CustomText(
+                  text,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  fontSize: spec.fontSize,
+                  fontWeight: FontWeight.w600,
+                  color: colors.foreground,
+                  textDecoration:
+                      underlineLabel ? TextDecoration.underline : null,
+                  style: const TextStyle(fontFamily: AppFonts.family),
+                ),
+              ),
+            if (trailingIcon != null &&
+                status != AppButtonStatus.loading) ...[
+              if (text.isNotEmpty) SizedBox(width: AppSizes.spaceSm),
+              Icon(
+                trailingIcon,
+                size: spec.iconSize,
+                color: colors.foreground,
+              ),
+            ],
+          ],
         ),
       ),
     );
