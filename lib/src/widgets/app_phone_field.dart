@@ -54,7 +54,7 @@ class AppPhoneField extends StatelessWidget {
     final prefix = Padding(
       padding: const EdgeInsetsDirectional.only(
         start: AppSizes.spaceXs,
-        end: AppSizes.spaceXs,
+        end: AppSizes.spaceSm,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
