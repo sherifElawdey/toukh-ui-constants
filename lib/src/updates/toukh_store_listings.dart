@@ -8,9 +8,9 @@ abstract final class ToukhStoreListings {
   ToukhStoreListings._();
 
   // TODO: set real Android applicationId / Play package name for each app.
-  static const String _playPackageToukhClient = 'com.example.toukh';
-  static const String _playPackageToukhDelivery = 'com.example.toukh.delivery';
-  static const String _playPackageToukhProvider = 'com.example.toukh.provider';
+  static const String _playPackageToukhClient = 'com.toukh.toukh';
+  static const String _playPackageToukhDelivery = 'com.toukh.delivery';
+  static const String _playPackageToukhProvider = 'com.toukh.provider.toukh_provider';
 
   // TODO: set real Apple App Store numeric IDs (or full https URLs) for each app.
   static const String _appStoreIdToukhClient = '0000000000';
