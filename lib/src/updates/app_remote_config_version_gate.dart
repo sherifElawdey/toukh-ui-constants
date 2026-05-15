@@ -32,10 +32,13 @@ Future<AppUpdateGateResult> checkAppVersionAgainstRemoteConfig({
   required String minimumVersionKey,
   Duration fetchTimeout = const Duration(seconds: 12),
 }) async {
+
+  final info = await PackageInfo.fromPlatform();
+  final currentRaw = info.version.trim();
   if (!ToukhRemoteConfigKeys.all.contains(minimumVersionKey)) {
     return AppUpdateGateResult(
       needsUpdate: false,
-      currentVersion: '',
+      currentVersion: currentRaw,
       error: ArgumentError.value(
         minimumVersionKey,
         'minimumVersionKey',
@@ -43,9 +46,6 @@ Future<AppUpdateGateResult> checkAppVersionAgainstRemoteConfig({
       ),
     );
   }
-
-  final info = await PackageInfo.fromPlatform();
-  final currentRaw = info.version.trim();
 
   try {
     final rc = FirebaseRemoteConfig.instance;
@@ -63,6 +63,7 @@ Future<AppUpdateGateResult> checkAppVersionAgainstRemoteConfig({
     await rc.fetchAndActivate().timeout(fetchTimeout);
 
     final minimumRaw = rc.getString(minimumVersionKey).trim();
+    debugPrint('[AppUpdateGate] minimumRaw: $minimumRaw');
     if (minimumRaw.isEmpty) {
       return AppUpdateGateResult(
         needsUpdate: false,
@@ -87,6 +88,7 @@ Future<AppUpdateGateResult> checkAppVersionAgainstRemoteConfig({
     }
 
     final needs = current < minimum;
+    debugPrint('[AppUpdateGate] needs: $needs');
     final storeUri = needs
         ? ToukhStoreListings.resolveStoreUriForRemoteConfigKey(minimumVersionKey)
         : null;
