@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -81,9 +82,15 @@ class ToukhPushMessaging {
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpened);
-    final initial = await FirebaseMessaging.instance.getInitialMessage();
-    if (initial != null) {
-      await _handleRemoteMessage(initial);
+    try {
+      final initial = await FirebaseMessaging.instance
+          .getInitialMessage()
+          .timeout(const Duration(seconds: 3));
+      if (initial != null) {
+        await _handleRemoteMessage(initial);
+      }
+    } on TimeoutException {
+      debugPrint('FCM getInitialMessage timed out; skipping cold-start tap.');
     }
 
     if (!kIsWeb && defaultTargetPlatform != TargetPlatform.iOS) {
