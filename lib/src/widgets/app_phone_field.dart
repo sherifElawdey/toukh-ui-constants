@@ -51,36 +51,40 @@ class AppPhoneField extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    final prefix = Padding(
-      padding: const EdgeInsetsDirectional.only(
-        start: AppSizes.spaceXs,
-        end: AppSizes.spaceSm,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text(
-            String.fromCharCodes(const [0x1F1EA, 0x1F1EC]),
-            style: const TextStyle(fontSize: 22, height: 1),
-          ),
-          SizedBox(width: AppSizes.spaceSm),
-          Container(
-            width: 1,
-            height: 20,
-            color: scheme.onSurface.withValues(alpha: 0.22),
-          ),
-          SizedBox(width: AppSizes.spaceSm),
-          Text(
-            '+20',
-            style: TextStyle(
-              fontFamily: AppFonts.family,
-              fontSize: AppSizes.fontBody,
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurface.withValues(alpha: 0.72),
+    final prefix = Directionality(
+      textDirection: TextDirection.ltr,
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: AppSizes.spaceXs,
+          right: AppSizes.spaceSm,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          textDirection: TextDirection.ltr,
+          children: [
+            Text(
+              String.fromCharCodes(const [0x1F1EA, 0x1F1EC]),
+              style: const TextStyle(fontSize: 22, height: 1),
             ),
-          ),
-        ],
+            SizedBox(width: AppSizes.spaceSm),
+            Container(
+              width: 1,
+              height: 20,
+              color: scheme.onSurface.withValues(alpha: 0.22),
+            ),
+            SizedBox(width: AppSizes.spaceSm),
+            Text(
+              '+20',
+              style: TextStyle(
+                fontFamily: AppFonts.family,
+                fontSize: AppSizes.fontBody,
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurface.withValues(alpha: 0.72),
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
@@ -89,6 +93,7 @@ class AppPhoneField extends StatelessWidget {
       controller: controller,
       label: label,
       hint: hint,
+      textDirection: TextDirection.ltr,
       keyboardType: TextInputType.number,
       textInputAction: textInputAction,
       validator:

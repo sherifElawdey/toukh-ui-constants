@@ -58,6 +58,7 @@ class AppTextField extends StatelessWidget {
     this.inputFormatters,
     this.autofillHints,
     this.leadingIcon,
+    this.unfocusOnTapOutside = true,
   });
 
   final Key? formFieldKey;
@@ -111,6 +112,9 @@ class AppTextField extends StatelessWidget {
   final Iterable<String>? autofillHints;
 
   final IconData? leadingIcon;
+
+  /// When true, tapping outside the field removes focus (keyboard dismiss).
+  final bool unfocusOnTapOutside;
 
   bool get _effectiveReadOnly => readOnly || readonly;
 
@@ -259,6 +263,9 @@ class AppTextField extends StatelessWidget {
       style: mergedStyle,
       textDirection: _effectiveTextDirection(context),
       decoration: dec,
+      onTapOutside: unfocusOnTapOutside
+          ? (_) => FocusScope.of(context).unfocus()
+          : null,
     );
 
     final column = underFieldWidget == null

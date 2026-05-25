@@ -2,6 +2,23 @@
 library;
 
 export 'src/constants/ui_assets.dart';
+export 'src/orders/aggregated_order_state_machine.dart';
+export 'src/orders/cart_line_for_split.dart';
+export 'src/orders/delivery_fee_calculator.dart';
+export 'src/orders/delivery_stop.dart';
+export 'src/orders/delivery_task.dart';
+export 'src/orders/delivery_task_status.dart';
+export 'src/orders/driver_assignment.dart';
+export 'src/orders/fulfillment_mode.dart';
+export 'src/orders/global_order_status.dart';
+export 'src/orders/master_order.dart';
+export 'src/orders/order_split_plan.dart';
+export 'src/orders/order_splitting_engine.dart';
+export 'src/orders/order_timeline_event.dart';
+export 'src/orders/provider_delivery_config.dart';
+export 'src/orders/provider_order_ref.dart';
+export 'src/orders/provider_sub_state.dart';
+export 'src/orders/toukh_order_paths.dart';
 export 'src/models/location.dart';
 export 'src/models/order_item_model.dart';
 export 'src/models/order_model.dart';

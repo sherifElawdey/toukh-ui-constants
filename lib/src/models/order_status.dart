@@ -2,19 +2,14 @@
 enum OrderStatus {
   /// Created by the client; not yet accepted by a driver.
   placed,
-
   /// A driver accepted; awaiting client confirmation / pickup.
   accepted,
-
   /// Driver picked up items from the merchant / pickup location.
   pickedUp,
-
   /// Items handed over to the client.
   delivered,
-
   /// Cancelled (by client, driver, or system).
   cancelled;
-
   /// Wire value used in transport / persistence layers.
   String get wireValue {
     switch (this) {

@@ -12,4 +12,10 @@ abstract final class ToukhOrderNotificationTypes {
   static const delivered = 'order_delivered';
   static const courierLate = 'courier_late';
   static const deliveryRequest = 'delivery_request';
+  static const preparing = 'preparing';
+  static const partiallyPicked = 'partially_picked';
+  static const pickupCompleted = 'pickup_completed';
+  static const driverRequested = 'driver_requested';
+  static const driverAssigned = 'driver_assigned';
+  static const orderRejected = 'order_rejected';
 }
