@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, debugPrint, defaultTargetPlatform, kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'toukh_fcm_token_sync.dart';
 import 'toukh_notification.dart';
 import 'toukh_notification_mapper.dart';
 import 'toukh_notification_recipient.dart';
@@ -27,6 +29,7 @@ class ToukhPushMessaging {
   FcmTokenPersister? _persistToken;
   NotificationTapHandler? _onTap;
   ToukhNotificationRecipient? _recipient;
+  FirebaseFirestore? _firestore;
   bool _initialized = false;
 
   /// Top-level background handler — register in each app's `main.dart`:
@@ -40,14 +43,16 @@ class ToukhPushMessaging {
   }
 
   Future<void> initialize({
-    required FcmTokenPersister persistToken,
     required NotificationTapHandler onTap,
     required ToukhNotificationRecipient recipient,
+    required FirebaseFirestore firestore,
+    FcmTokenPersister? persistToken,
   }) async {
     if (_initialized) return;
     _persistToken = persistToken;
     _onTap = onTap;
     _recipient = recipient;
+    _firestore = firestore;
 
     await _local.initialize(
       InitializationSettings(
@@ -114,15 +119,46 @@ class ToukhPushMessaging {
 
   Future<String?> getToken() => FirebaseMessaging.instance.getToken();
 
-  Future<void> syncToken(String uid) async {
-    if (!_initialized || _persistToken == null) return;
+  Future<void> syncToken(
+    String uid, {
+    List<String> existingFcmTokens = const [],
+  }) async {
+    if (!_initialized) return;
     if (kIsWeb) return;
+
+    Future<void> syncWithRegistry() async {
+      final firestore = _firestore;
+      final recipient = _recipient;
+      if (firestore == null || recipient == null) return;
+      await ToukhFcmTokenSync.syncIfNeeded(
+        uid: uid,
+        existingFcmTokens: existingFcmTokens,
+        firestore: firestore,
+        recipient: recipient,
+        getCurrentToken: getToken,
+      );
+    }
+
+    if (_firestore != null && _recipient != null) {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+        try {
+          await syncWithRegistry();
+        } on FirebaseException catch (e) {
+          debugPrint('FCM syncToken iOS deferred: ${e.code}');
+        }
+        return;
+      }
+      await syncWithRegistry();
+      return;
+    }
+
+    final persist = _persistToken;
+    if (persist == null) return;
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-      // iOS APNS pipeline may be deferred in some builds.
       try {
         final token = await FirebaseMessaging.instance.getToken();
         if (token != null && token.isNotEmpty) {
-          await _persistToken!(uid, token);
+          await persist(uid, token);
         }
       } on FirebaseException catch (e) {
         debugPrint('FCM syncToken iOS deferred: ${e.code}');
@@ -132,7 +168,7 @@ class ToukhPushMessaging {
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null && token.isNotEmpty) {
-        await _persistToken!(uid, token);
+        await persist(uid, token);
       }
     } catch (e, st) {
       debugPrint('FCM syncToken failed: $e\n$st');
