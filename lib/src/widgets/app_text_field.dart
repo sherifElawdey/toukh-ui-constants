@@ -319,26 +319,29 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
 
   @override
   Widget build(BuildContext context) {
-    return AppTextField(
-      controller: widget.controller,
-      label: widget.label,
-      hint: widget.hint,
-      obscureText: _obscure,
-      keyboardType: TextInputType.visiblePassword,
-      textInputAction: widget.textInputAction,
-      validator: widget.validator,
-      autofillHints: widget.autofillHints,
-      leadingIcon: Icons.lock_outline_rounded,
-      suffixIcon: IconButton(
-        onPressed: () => setState(() => _obscure = !_obscure),
-        icon: Icon(
-          _obscure
-              ? Icons.visibility_outlined
-              : Icons.visibility_off_outlined,
-          size: AppSizes.iconMd,
-          color: AppColors.secondColor.withValues(alpha: 0.75),
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: AppTextField(
+        controller: widget.controller,
+        label: widget.label,
+        hint: widget.hint,
+        obscureText: _obscure,
+        keyboardType: TextInputType.visiblePassword,
+        textInputAction: widget.textInputAction,
+        validator: widget.validator,
+        autofillHints: widget.autofillHints,
+        leadingIcon: Icons.lock_outline_rounded,
+        suffixIcon: IconButton(
+          onPressed: () => setState(() => _obscure = !_obscure),
+          icon: Icon(
+            _obscure
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            size: AppSizes.iconMd,
+            color: AppColors.secondColor.withValues(alpha: 0.75),
+          ),
+          tooltip: _obscure ? 'Show password' : 'Hide password',
         ),
-        tooltip: _obscure ? 'Show password' : 'Hide password',
       ),
     );
   }

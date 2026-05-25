@@ -122,7 +122,6 @@ class AppPhoneField extends StatelessWidget {
         autoDirection: false,
         
         prefixIconConstraints: const BoxConstraints(
-          // minWidth: 112,
           maxHeight: 48,
         ),
         onFieldSubmitted: onFieldSubmitted,
