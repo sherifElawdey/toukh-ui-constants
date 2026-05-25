@@ -88,39 +88,45 @@ class AppPhoneField extends StatelessWidget {
       ),
     );
 
-    return AppTextField(
-      formFieldKey: formFieldKey,
-      controller: controller,
-      label: label,
-      hint: hint,
+    return Directionality(
       textDirection: TextDirection.ltr,
-      keyboardType: TextInputType.number,
-      textInputAction: textInputAction,
-      validator:
-          validator ??
-          (v) => AppPhoneField.defaultTenDigitValidator(
-                v,
-                invalidMessage: invalidTenDigitsMessage,
-              ),
-      focusNode: focusNode,
-      enabled: enabled,
-      margin: EdgeInsets.zero,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 0,
-        vertical: AppSizes.spaceBase,
+    
+      child: AppTextField(
+        formFieldKey: formFieldKey,
+        controller: controller,
+        label: label,
+        hint: hint,
+        textDirection: TextDirection.ltr,
+        keyboardType: TextInputType.number,
+        textInputAction: textInputAction,
+        validator:
+            validator ??
+            (v) => AppPhoneField.defaultTenDigitValidator(
+                  v,
+                  invalidMessage: invalidTenDigitsMessage,
+                ),
+        focusNode: focusNode,
+        enabled: enabled,
+        margin: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 0,
+          vertical: AppSizes.spaceBase,
+        ),
+        errorText: errorText,
+        autofillHints: autofillHints,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(10),
+        ],
+        prefixIcon: prefix,
+        autoDirection: false,
+        
+        prefixIconConstraints: const BoxConstraints(
+          // minWidth: 112,
+          maxHeight: 48,
+        ),
+        onFieldSubmitted: onFieldSubmitted,
       ),
-      errorText: errorText,
-      autofillHints: autofillHints,
-      inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(10),
-      ],
-      prefixIcon: prefix,
-      prefixIconConstraints: const BoxConstraints(
-        // minWidth: 112,
-        maxHeight: 48,
-      ),
-      onFieldSubmitted: onFieldSubmitted,
     );
   }
 }
