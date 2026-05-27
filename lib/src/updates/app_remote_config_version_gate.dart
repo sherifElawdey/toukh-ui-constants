@@ -1,5 +1,5 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pub_semver/pub_semver.dart';
 
@@ -56,7 +56,8 @@ Future<AppUpdateGateResult> checkAppVersionAgainstRemoteConfig({
     await rc.setConfigSettings(
       RemoteConfigSettings(
         fetchTimeout: fetchTimeout,
-        minimumFetchInterval: const Duration(hours: 1),
+        minimumFetchInterval:
+            kDebugMode ? Duration.zero : const Duration(hours: 1),
       ),
     );
 

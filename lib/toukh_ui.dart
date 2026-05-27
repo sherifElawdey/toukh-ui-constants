@@ -34,6 +34,7 @@ export 'src/twilio/twilio_verify_client.dart';
 export 'src/twilio/twilio_verify_config.dart';
 export 'src/ui/app_loading.dart';
 export 'src/ui/app_snack.dart';
+export 'src/updates/app_mandatory_update_dialog.dart';
 export 'src/updates/app_mandatory_update_screen.dart';
 export 'src/updates/app_remote_config_version_gate.dart';
 export 'src/updates/toukh_remote_config_keys.dart';
