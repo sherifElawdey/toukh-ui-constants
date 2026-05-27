@@ -7,7 +7,6 @@ import 'toukh_remote_config_keys.dart';
 import 'toukh_store_listings.dart';
 
 /// Outcome of [checkAppVersionAgainstRemoteConfig].
-@immutable
 final class AppUpdateGateResult {
   const AppUpdateGateResult({
     required this.needsUpdate,
