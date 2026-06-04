@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:toukh_ui/src/icons/toukh_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
@@ -330,13 +331,11 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
         textInputAction: widget.textInputAction,
         validator: widget.validator,
         autofillHints: widget.autofillHints,
-        leadingIcon: Icons.lock_outline_rounded,
+        leadingIcon: ToukhIcons.lock,
         suffixIcon: IconButton(
           onPressed: () => setState(() => _obscure = !_obscure),
           icon: Icon(
-            _obscure
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
+            _obscure ? ToukhIcons.visibility : ToukhIcons.visibilityOff,
             size: AppSizes.iconMd,
             color: AppColors.secondColor.withValues(alpha: 0.75),
           ),

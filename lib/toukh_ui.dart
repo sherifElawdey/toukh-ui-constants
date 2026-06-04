@@ -1,7 +1,10 @@
 /// Shared Toukh design tokens, themes, and widgets for consumer + delivery apps.
 library;
 
+export 'package:phosphor_flutter/phosphor_flutter.dart';
+
 export 'src/constants/ui_assets.dart';
+export 'src/icons/toukh_icons.dart';
 export 'src/orders/aggregated_order_state_machine.dart';
 export 'src/orders/cart_line_for_split.dart';
 export 'src/orders/delivery_fee_calculator.dart';
@@ -50,6 +53,7 @@ export 'src/notifications/toukh_notification_routes.dart';
 export 'src/notifications/toukh_order_notification_types.dart';
 export 'src/notifications/toukh_push_config.dart';
 export 'src/notifications/toukh_push_messaging.dart';
+export 'src/widgets/app_icon.dart';
 export 'src/widgets/app_button.dart';
 export 'src/widgets/app_inputs.dart';
 export 'src/widgets/app_logo_loading.dart';

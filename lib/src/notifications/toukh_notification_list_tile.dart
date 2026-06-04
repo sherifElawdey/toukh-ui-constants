@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:toukh_ui/src/icons/toukh_icons.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_sizes.dart';
@@ -140,7 +141,7 @@ class _LeadingImage extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Icon(
-        Icons.notifications_outlined,
+        ToukhIcons.notifications,
         color: scheme.onSurface.withValues(alpha: 0.4),
       ),
     );
