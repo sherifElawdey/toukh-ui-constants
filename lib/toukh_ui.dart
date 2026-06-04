@@ -44,6 +44,8 @@ export 'src/updates/toukh_remote_config_keys.dart';
 export 'src/updates/toukh_store_listings.dart';
 export 'src/notifications/toukh_fcm_data_keys.dart';
 export 'src/notifications/toukh_fcm_token_sync.dart';
+export 'src/notifications/toukh_notification_category.dart';
+export 'src/notifications/toukh_notification_style.dart';
 export 'src/notifications/toukh_notification.dart';
 export 'src/notifications/toukh_notification_list_tile.dart';
 export 'src/notifications/toukh_notification_mapper.dart';

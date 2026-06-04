@@ -48,4 +48,33 @@ abstract final class ToukhFcmTokenSync {
       debugPrint('ToukhFcmTokenSync.syncIfNeeded failed: $e\n$st');
     }
   }
+
+  /// Reads live [fcmTokens] from Firestore, then registers the current device
+  /// token when it is not already in the profile list.
+  static Future<void> syncOnAppOpen({
+    required String uid,
+    required FirebaseFirestore firestore,
+    required ToukhNotificationRecipient recipient,
+    Future<String?> Function()? getCurrentToken,
+  }) async {
+    try {
+      final snap =
+          await firestore.collection(recipient.collectionName).doc(uid).get();
+      final data = snap.data();
+      final existing = (data?['fcmTokens'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .where((t) => t.isNotEmpty)
+              .toList() ??
+          <String>[];
+      await syncIfNeeded(
+        uid: uid,
+        existingFcmTokens: existing,
+        firestore: firestore,
+        recipient: recipient,
+        getCurrentToken: getCurrentToken,
+      );
+    } catch (e, st) {
+      debugPrint('ToukhFcmTokenSync.syncOnAppOpen failed: $e\n$st');
+    }
+  }
 }
