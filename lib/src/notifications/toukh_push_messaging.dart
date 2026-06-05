@@ -39,23 +39,35 @@ class ToukhPushMessaging {
   FirebaseFirestore? _firestore;
   bool _initialized = false;
 
-  /// Top-level background handler — register in each app's `main.dart`:
-  /// `FirebaseMessaging.onBackgroundMessage(toukhFirebaseMessagingBackgroundHandler);`
-  @pragma('vm:entry-point')
-  static Future<void> firebaseMessagingBackgroundHandler(
-    RemoteMessage message,
-  ) async {
-    await Firebase.initializeApp();
+  /// Shows a tray notification for background/data-only FCM (call after Firebase init).
+  static Future<void> showBackgroundNotification(RemoteMessage message) async {
     if (kIsWeb) return;
+
     final n = message.notification;
-    if (n == null) {
-      debugPrint('FCM background (data-only): ${message.messageId}');
+    final title =
+        n?.title ?? message.data['title']?.toString().trim() ?? 'Toukh';
+    final body = n?.body ??
+        message.data['body']?.toString() ??
+        message.data['description']?.toString() ??
+        '';
+
+    if (title.isEmpty && body.isEmpty) {
+      debugPrint('FCM background: empty payload ${message.messageId}');
       return;
     }
+
+    // iOS already displays alerts when the FCM `notification` block is present.
+    if (defaultTargetPlatform == TargetPlatform.iOS && n != null) {
+      return;
+    }
+
     final plugin = FlutterLocalNotificationsPlugin();
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     await plugin.initialize(
-      const InitializationSettings(android: android, iOS: DarwinInitializationSettings()),
+      const InitializationSettings(
+        android: android,
+        iOS: DarwinInitializationSettings(),
+      ),
     );
     if (defaultTargetPlatform == TargetPlatform.android) {
       const channel = AndroidNotificationChannel(
@@ -69,10 +81,11 @@ class ToukhPushMessaging {
               AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(channel);
     }
+
     await plugin.show(
       message.hashCode,
-      n.title ?? message.data['title'] ?? 'Toukh',
-      n.body ?? message.data['body'] ?? '',
+      title,
+      body,
       NotificationDetails(
         android: AndroidNotificationDetails(
           ToukhPushConfig.androidChannelId,
@@ -84,6 +97,17 @@ class ToukhPushMessaging {
       ),
       payload: jsonEncode(message.data),
     );
+  }
+
+  /// Legacy handler — prefer per-app handlers with [DefaultFirebaseOptions].
+  @pragma('vm:entry-point')
+  static Future<void> firebaseMessagingBackgroundHandler(
+    RemoteMessage message,
+  ) async {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
+    }
+    await showBackgroundNotification(message);
   }
 
   Future<void> initialize({
