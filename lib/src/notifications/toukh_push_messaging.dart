@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart'
     show TargetPlatform, debugPrint, defaultTargetPlatform, kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'toukh_fcm_apns.dart';
 import 'toukh_fcm_token_sync.dart';
 import 'toukh_notification.dart';
 import 'toukh_fcm_data_keys.dart';
@@ -162,7 +163,7 @@ class ToukhPushMessaging {
     );
   }
 
-  Future<String?> getToken() => FirebaseMessaging.instance.getToken();
+  Future<String?> getToken() => ToukhFcmApns.getToken();
 
   Future<void> syncToken(
     String uid, {
@@ -207,7 +208,7 @@ class ToukhPushMessaging {
     if (persist == null) return;
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       try {
-        final token = await FirebaseMessaging.instance.getToken();
+        final token = await ToukhFcmApns.getToken();
         if (token != null && token.isNotEmpty) {
           await persist(uid, token);
         }

@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 
+import 'toukh_fcm_apns.dart';
 import 'toukh_notification_recipient.dart';
-import 'toukh_push_messaging.dart';
 
 /// Merges and persists FCM device tokens on user/provider/driver profiles.
 abstract final class ToukhFcmTokenSync {
@@ -32,7 +32,7 @@ abstract final class ToukhFcmTokenSync {
     Future<String?> Function()? getCurrentToken,
   }) async {
     try {
-      final token = await (getCurrentToken ?? ToukhPushMessaging.instance.getToken)();
+      final token = await (getCurrentToken ?? ToukhFcmApns.getToken)();
       if (token == null || token.isEmpty) return;
       if (existingFcmTokens.contains(token)) return;
 
