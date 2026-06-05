@@ -51,6 +51,7 @@ export 'src/notifications/toukh_notification_category.dart';
 export 'src/notifications/toukh_notification_style.dart';
 export 'src/notifications/toukh_notification.dart';
 export 'src/notifications/toukh_notification_list_tile.dart';
+export 'src/notifications/toukh_notification_inbox_menu_button.dart';
 export 'src/notifications/toukh_notification_mapper.dart';
 export 'src/notifications/toukh_notification_paths.dart';
 export 'src/notifications/toukh_notification_recipient.dart';

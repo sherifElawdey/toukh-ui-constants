@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../icons/toukh_icons.dart';
 import '../theme/app_sizes.dart';
 import '../widgets/custom_text.dart';
 import 'toukh_notification.dart';
@@ -14,6 +15,7 @@ class ToukhNotificationListTile extends StatelessWidget {
     this.subtitle,
     this.statusChipLabel,
     this.categoryLabel,
+    this.onDelete,
   });
 
   final ToukhNotification notification;
@@ -25,6 +27,8 @@ class ToukhNotificationListTile extends StatelessWidget {
 
   /// Localized category label for non-order notifications.
   final String? categoryLabel;
+
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -48,34 +52,39 @@ class ToukhNotificationListTile extends StatelessWidget {
               notification.category,
             ))
         : null;
+    final chipLabel = chipText ?? nonOrderCategory;
 
     return Material(
       color: notification.isUnread
           ? style.accentColor.withValues(alpha: 0.08)
           : scheme.surfaceContainerHighest.withValues(alpha: 0.35),
       borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _LeadingIcon(
-                imageUrl: notification.imageUrl,
-                icon: style.icon,
-                accentColor: style.accentColor,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomText(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 4, 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _LeadingIcon(
+              imageUrl: notification.imageUrl,
+              icon: style.icon,
+              accentColor: style.accentColor,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          CustomText(
                             notification.title,
                             style: TextStyle(
                               fontWeight: notification.isUnread
@@ -85,59 +94,62 @@ class ToukhNotificationListTile extends StatelessWidget {
                               color: scheme.onSurface,
                             ),
                           ),
-                        ),
-                        if (notification.isUnread)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            margin: const EdgeInsets.only(left: 6),
-                            decoration: BoxDecoration(
+                          if (chipLabel != null && chipLabel.isNotEmpty)
+                            _StatusChip(
+                              label: chipLabel,
                               color: style.accentColor,
-                              shape: BoxShape.circle,
                             ),
+                          if (notification.isUnread)
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: style.accentColor,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (timeText.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        CustomText(
+                          timeText,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: scheme.onSurface.withValues(alpha: 0.45),
                           ),
+                        ),
                       ],
-                    ),
-                    if (chipText != null && chipText.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      _StatusChip(
-                        label: chipText,
-                        color: style.accentColor,
-                      ),
-                    ] else if (nonOrderCategory != null &&
-                        nonOrderCategory.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      _StatusChip(
-                        label: nonOrderCategory,
-                        color: style.accentColor,
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    CustomText(
-                      notification.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: scheme.onSurface.withValues(alpha: 0.65),
-                        height: 1.3,
-                      ),
-                    ),
-                    if (timeText.isNotEmpty) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       CustomText(
-                        timeText,
+                        notification.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 11,
-                          color: scheme.onSurface.withValues(alpha: 0.45),
+                          fontSize: 13,
+                          color: scheme.onSurface.withValues(alpha: 0.65),
+                          height: 1.3,
                         ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+            if (onDelete != null)
+              IconButton(
+                icon: Icon(
+                  ToukhIcons.close,
+                  size: 18,
+                  color: scheme.onSurface.withValues(alpha: 0.45),
+                ),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                onPressed: onDelete,
+                tooltip: 'Delete',
+              ),
+          ],
         ),
       ),
     );
