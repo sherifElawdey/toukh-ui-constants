@@ -37,6 +37,7 @@ class ToukhPushMessaging {
   ForegroundNotificationHandler? _onForegroundNotification;
   ToukhNotificationRecipient? _recipient;
   FirebaseFirestore? _firestore;
+  String? _syncedUid;
   bool _initialized = false;
 
   /// Shows a tray notification for background/data-only FCM (call after Firebase init).
@@ -168,10 +169,25 @@ class ToukhPushMessaging {
       debugPrint('FCM getInitialMessage timed out; skipping cold-start tap.');
     }
 
-    if (!kIsWeb && defaultTargetPlatform != TargetPlatform.iOS) {
+    if (!kIsWeb) {
       FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
-        // Apps should call syncToken(uid) after auth; refresh handled there.
         debugPrint('FCM token refreshed (${_recipient?.name})');
+        final uid = _syncedUid;
+        final firestore = _firestore;
+        final recipient = _recipient;
+        if (uid == null ||
+            uid.isEmpty ||
+            firestore == null ||
+            recipient == null) {
+          return;
+        }
+        await ToukhFcmTokenSync.syncIfNeeded(
+          uid: uid,
+          existingFcmTokens: const [],
+          firestore: firestore,
+          recipient: recipient,
+          getCurrentToken: () async => token,
+        );
       });
     }
 
@@ -195,6 +211,7 @@ class ToukhPushMessaging {
   }) async {
     if (!_initialized) return;
     if (kIsWeb) return;
+    _syncedUid = uid;
 
     Future<void> syncWithRegistry() async {
       final firestore = _firestore;
