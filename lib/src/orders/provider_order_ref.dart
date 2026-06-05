@@ -13,6 +13,8 @@ class ProviderOrderRef extends Equatable {
     this.orderPriceEgp = 0,
     this.deliveryFeeEgp = 0,
     this.isAggregated = false,
+    this.cancelledAt,
+    this.cancelReason,
   });
 
   final String providerId;
@@ -23,6 +25,8 @@ class ProviderOrderRef extends Equatable {
   final double orderPriceEgp;
   final double deliveryFeeEgp;
   final bool isAggregated;
+  final DateTime? cancelledAt;
+  final String? cancelReason;
 
   double get totalEgp => orderPriceEgp + deliveryFeeEgp;
 
@@ -30,6 +34,8 @@ class ProviderOrderRef extends Equatable {
     ProviderSubState? providerState,
     FulfillmentMode? fulfillmentMode,
     double? deliveryFeeEgp,
+    DateTime? cancelledAt,
+    String? cancelReason,
   }) {
     return ProviderOrderRef(
       providerId: providerId,
@@ -40,6 +46,8 @@ class ProviderOrderRef extends Equatable {
       orderPriceEgp: orderPriceEgp,
       deliveryFeeEgp: deliveryFeeEgp ?? this.deliveryFeeEgp,
       isAggregated: isAggregated,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
+      cancelReason: cancelReason ?? this.cancelReason,
     );
   }
 
@@ -52,6 +60,8 @@ class ProviderOrderRef extends Equatable {
         'orderPriceEgp': orderPriceEgp,
         'deliveryFeeEgp': deliveryFeeEgp,
         'isAggregated': isAggregated,
+        if (cancelledAt != null) 'cancelledAt': cancelledAt!.toIso8601String(),
+        if (cancelReason != null) 'cancelReason': cancelReason,
       };
 
   factory ProviderOrderRef.fromMap(Map<String, dynamic> map) {
@@ -64,7 +74,15 @@ class ProviderOrderRef extends Equatable {
       orderPriceEgp: (map['orderPriceEgp'] as num?)?.toDouble() ?? 0,
       deliveryFeeEgp: (map['deliveryFeeEgp'] as num?)?.toDouble() ?? 0,
       isAggregated: map['isAggregated'] as bool? ?? false,
+      cancelledAt: _parseDate(map['cancelledAt']),
+      cancelReason: map['cancelReason'] as String?,
     );
+  }
+
+  static DateTime? _parseDate(dynamic v) {
+    if (v == null) return null;
+    if (v is DateTime) return v;
+    return DateTime.tryParse(v.toString());
   }
 
   @override
@@ -77,5 +95,7 @@ class ProviderOrderRef extends Equatable {
         orderPriceEgp,
         deliveryFeeEgp,
         isAggregated,
+        cancelledAt,
+        cancelReason,
       ];
 }
