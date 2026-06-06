@@ -6,6 +6,7 @@ import 'toukh_firestore_timestamps.dart';
 import 'driver_assignment.dart';
 import 'global_order_status.dart';
 import 'provider_order_ref.dart';
+import 'provider_order_slice.dart';
 import 'provider_sub_state.dart';
 
 class MasterOrder extends Equatable {
@@ -27,6 +28,8 @@ class MasterOrder extends Equatable {
     this.timelineId,
     this.ratingCompleted = false,
     this.note,
+    this.providerIds = const [],
+    this.providerSlices = const {},
     this.createdAt,
     this.updatedAt,
   });
@@ -48,6 +51,8 @@ class MasterOrder extends Equatable {
   final String? timelineId;
   final bool ratingCompleted;
   final String? note;
+  final List<String> providerIds;
+  final Map<String, ProviderOrderSlice> providerSlices;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -70,6 +75,8 @@ class MasterOrder extends Equatable {
     String? deliveryTaskId,
     DriverAssignment? driverAssignment,
     bool? ratingCompleted,
+    List<String>? providerIds,
+    Map<String, ProviderOrderSlice>? providerSlices,
     DateTime? updatedAt,
   }) {
     return MasterOrder(
@@ -90,6 +97,8 @@ class MasterOrder extends Equatable {
       timelineId: timelineId,
       ratingCompleted: ratingCompleted ?? this.ratingCompleted,
       note: note,
+      providerIds: providerIds ?? this.providerIds,
+      providerSlices: providerSlices ?? this.providerSlices,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -115,6 +124,10 @@ class MasterOrder extends Equatable {
         if (timelineId != null) 'timelineId': timelineId,
         'ratingCompleted': ratingCompleted,
         if (note != null) 'note': note,
+        'providerIds': providerIds,
+        'providerSlices': providerSlices.map(
+          (k, v) => MapEntry(k, v.toMap()),
+        ),
         if (createdAt != null)
           'createdAt': Timestamp.fromDate(createdAt!),
         if (updatedAt != null)
@@ -136,6 +149,24 @@ class MasterOrder extends Equatable {
         statusMap['$key'] = ProviderSubState.fromWire('$value');
       });
     }
+
+    final slicesRaw = map['providerSlices'];
+    final slices = <String, ProviderOrderSlice>{};
+    if (slicesRaw is Map) {
+      slicesRaw.forEach((key, value) {
+        if (value is Map) {
+          slices['$key'] = ProviderOrderSlice.fromMap(
+            '$key',
+            Map<String, dynamic>.from(value),
+          );
+        }
+      });
+    }
+
+    final idsRaw = map['providerIds'];
+    final providerIds = idsRaw is List
+        ? idsRaw.map((e) => '$e').toList()
+        : slices.keys.toList();
 
     return MasterOrder(
       id: id,
@@ -161,6 +192,8 @@ class MasterOrder extends Equatable {
       timelineId: map['timelineId'] as String?,
       ratingCompleted: map['ratingCompleted'] as bool? ?? false,
       note: map['note'] as String?,
+      providerIds: providerIds,
+      providerSlices: slices,
       createdAt: _parseDate(map['createdAt']),
       updatedAt: _parseDate(map['updatedAt']),
     );
@@ -187,6 +220,8 @@ class MasterOrder extends Equatable {
         timelineId,
         ratingCompleted,
         note,
+        providerIds,
+        providerSlices,
         createdAt,
         updatedAt,
       ];

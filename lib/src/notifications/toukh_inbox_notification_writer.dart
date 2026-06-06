@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 
+import '../orders/toukh_order_paths.dart';
 import 'toukh_notification.dart';
 import 'toukh_notification_mapper.dart';
 import 'toukh_notification_paths.dart';
@@ -13,11 +14,8 @@ class ToukhInboxNotificationWriter {
 
   final FirebaseFirestore _firestore;
 
-  DocumentReference<Map<String, dynamic>> _orderRef(
-    String providerId,
-    String orderId,
-  ) =>
-      _firestore.collection('providers').doc(providerId).collection('orders').doc(orderId);
+  DocumentReference<Map<String, dynamic>> _masterRef(String masterOrderId) =>
+      _firestore.collection(ToukhOrderPaths.masterOrders).doc(masterOrderId);
 
   CollectionReference<Map<String, dynamic>> _inboxRef(
     ToukhNotificationRecipient recipient,
@@ -48,7 +46,7 @@ class ToukhInboxNotificationWriter {
     }
   }
 
-  /// Idempotent provider new-order inbox row (sets [providerPushSentAt] on order).
+  /// Idempotent provider new-order inbox row (sets [providerPushSentAt] on slice).
   Future<String?> deliverProviderNewOrderIfNeeded({
     required String providerId,
     required String orderId,
@@ -57,14 +55,22 @@ class ToukhInboxNotificationWriter {
   }) async {
     try {
       return await _firestore.runTransaction((tx) async {
-        final orderRef = _orderRef(providerId, orderId);
-        final orderSnap = await tx.get(orderRef);
-        if (!orderSnap.exists) return null;
-        final data = orderSnap.data() ?? {};
-        if (data['providerPushSentAt'] != null) return null;
+        final masterRef = _masterRef(orderId);
+        final masterSnap = await tx.get(masterRef);
+        if (!masterSnap.exists) return null;
+
+        final master = masterSnap.data() ?? {};
+        final slices = Map<String, dynamic>.from(
+          master['providerSlices'] as Map? ?? {},
+        );
+        final slice = Map<String, dynamic>.from(
+          slices[providerId] as Map? ?? {},
+        );
+        if (slice.isEmpty) return null;
+        if (slice['providerPushSentAt'] != null) return null;
 
         final template = ToukhOrderNotificationTemplates.buildProviderNewOrderTemplate(
-          order: orderSnap.data() ?? order,
+          order: {...slice, ...order},
           providerId: providerId,
           orderId: orderId,
           customerPhotoUrl: customerPhotoUrl,
@@ -78,9 +84,10 @@ class ToukhInboxNotificationWriter {
         final doc = ToukhNotificationMapper.toFirestore(template);
         doc['createdAt'] = FieldValue.serverTimestamp();
         tx.set(inboxRef, doc);
-        tx.set(orderRef, {
-          'providerPushSentAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+
+        slice['providerPushSentAt'] = FieldValue.serverTimestamp();
+        slices[providerId] = slice;
+        tx.update(masterRef, {'providerSlices': slices});
 
         return inboxRef.id;
       });
@@ -125,11 +132,17 @@ class ToukhInboxNotificationWriter {
     String? providerImageUrl,
   }) async {
     try {
-      final orderRef = _orderRef(providerId, orderId);
-      final orderSnap = await orderRef.get();
-      if (!orderSnap.exists) return null;
+      final masterRef = _masterRef(orderId);
+      final masterSnap = await masterRef.get();
+      if (!masterSnap.exists) return null;
 
-      final orderData = order ?? orderSnap.data() ?? {};
+      final master = masterSnap.data() ?? {};
+      final slices = master['providerSlices'] as Map? ?? {};
+      final sliceMap = slices[providerId] as Map?;
+      final orderData = order ??
+          (sliceMap != null
+              ? Map<String, dynamic>.from(sliceMap)
+              : <String, dynamic>{});
       final status = nextStatus ?? orderData['status']?.toString();
       if (status == null || status.isEmpty) return null;
 
@@ -174,15 +187,24 @@ class ToukhInboxNotificationWriter {
   }) async {
     try {
       return await _firestore.runTransaction((tx) async {
-        final orderRef = _orderRef(providerId, orderId);
-        final orderSnap = await tx.get(orderRef);
-        if (!orderSnap.exists) return null;
+        final masterRef = _masterRef(orderId);
+        final masterSnap = await tx.get(masterRef);
+        if (!masterSnap.exists) return null;
 
-        final data = orderSnap.data() ?? order;
-        final pushMap = data['customerStatusPushAt'];
+        final master = masterSnap.data() ?? {};
+        final pushMap = master['customerStatusPushAt'];
         if (pushMap is Map && pushMap[statusKey] != null) return null;
 
-        final template = templateBuilder(data);
+        final slices = Map<String, dynamic>.from(
+          master['providerSlices'] as Map? ?? {},
+        );
+        final slice = Map<String, dynamic>.from(
+          slices[providerId] as Map? ?? order,
+        );
+        final slicePush = slice['customerStatusPushAt'];
+        if (slicePush is Map && slicePush[statusKey] != null) return null;
+
+        final template = templateBuilder({...slice, ...order});
         final inboxRef = _inboxRef(
           ToukhNotificationRecipient.customer,
           customerId,
@@ -191,9 +213,9 @@ class ToukhInboxNotificationWriter {
         final doc = ToukhNotificationMapper.toFirestore(template);
         doc['createdAt'] = FieldValue.serverTimestamp();
         tx.set(inboxRef, doc);
-        tx.set(orderRef, {
+        tx.update(masterRef, {
           'customerStatusPushAt.$statusKey': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        });
 
         return inboxRef.id;
       });

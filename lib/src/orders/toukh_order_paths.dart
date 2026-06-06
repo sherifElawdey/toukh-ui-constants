@@ -3,6 +3,7 @@ abstract final class ToukhOrderPaths {
   ToukhOrderPaths._();
 
   static const masterOrders = 'masterOrders';
+  static const finishedOrders = 'finishedOrders';
   static const deliveryTasks = 'deliveryTasks';
   static const deliveryRequests = 'deliveryRequests';
   static const orderTimelines = 'orderTimelines';
@@ -10,6 +11,9 @@ abstract final class ToukhOrderPaths {
 
   static String masterOrder(String id) => '$masterOrders/$id';
 
+  static String finishedOrder(String id) => '$finishedOrders/$id';
+
+  /// Legacy path — active orders use [masterOrders] only.
   static String providerOrders(String providerId) => 'providers/$providerId/orders';
 
   static String providerOrder(String providerId, String orderId) =>
