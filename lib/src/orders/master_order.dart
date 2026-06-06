@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
 import '../models/location.dart';
+import 'toukh_firestore_timestamps.dart';
 import 'driver_assignment.dart';
 import 'global_order_status.dart';
 import 'provider_order_ref.dart';
@@ -114,8 +115,10 @@ class MasterOrder extends Equatable {
         if (timelineId != null) 'timelineId': timelineId,
         'ratingCompleted': ratingCompleted,
         if (note != null) 'note': note,
-        if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt ?? DateTime.now()),
-        if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt ?? DateTime.now()),
+        if (createdAt != null)
+          'createdAt': Timestamp.fromDate(createdAt!),
+        if (updatedAt != null)
+          'updatedAt': Timestamp.fromDate(updatedAt!),
       };
 
   factory MasterOrder.fromMap(String id, Map<String, dynamic> map) {
@@ -163,12 +166,7 @@ class MasterOrder extends Equatable {
     );
   }
 
-  static DateTime? _parseDate(dynamic v) {
-    if (v == null) return null;
-    if (v is DateTime) return v;
-    if (v is Timestamp) return v.toDate();
-    return DateTime.tryParse(v.toString());
-  }
+  static DateTime? _parseDate(dynamic v) => ToukhFirestoreTimestamps.toDateTime(v);
 
   @override
   List<Object?> get props => [
