@@ -12,7 +12,7 @@ abstract final class ToukhUiAssets {
   static const String sectionsSupermarkets =
       'assets/sections/Supermarket Cart.json';
   static const String sectionsHomeServices =
-      'assets/sections/home_services.json';
+      'assets/sections/home_services2.json';
   static const String sectionsHomeSales =
       'assets/sections/delivery food splash.json';
   static const String sectionsTaxi = 'assets/sections/Moto riding.json';
