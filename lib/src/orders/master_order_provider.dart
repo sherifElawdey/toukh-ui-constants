@@ -13,6 +13,14 @@ extension MasterOrderProviderX on MasterOrder {
   ProviderOrderSlice? sliceFor(String providerId) =>
       providerSlices[providerId];
 
+  /// True when [providerId] appears in [providerOrderRefs].
+  bool includesProvider(String providerId) =>
+      providerOrderRefs.any((r) => r.providerId == providerId);
+
+  /// Membership in both [providerOrderRefs] and [providerSlices].
+  bool hasProviderSlice(String providerId) =>
+      includesProvider(providerId) && providerSlices.containsKey(providerId);
+
   bool isActiveForProvider(String providerId) {
     if (globalStatus.isTerminal) return false;
     final slice = sliceFor(providerId);
@@ -129,7 +137,7 @@ abstract final class ProviderMasterOrderTabFilters {
   ) {
     return [
       for (final m in masters)
-        if (m.providerSlices.containsKey(providerId))
+        if (m.hasProviderSlice(providerId))
           ProviderMasterOrderRow.fromMaster(m, providerId),
     ];
   }
@@ -140,7 +148,7 @@ abstract final class ProviderMasterOrderTabFilters {
     ProviderOrdersTab tab,
   ) {
     final rows = masters
-        .where((m) => m.providerSlices.containsKey(providerId))
+        .where((m) => m.hasProviderSlice(providerId))
         .map((m) => ProviderMasterOrderRow.fromMaster(m, providerId))
         .toList();
     return switch (tab) {
