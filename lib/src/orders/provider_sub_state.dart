@@ -1,6 +1,7 @@
 /// Per-provider state inside a master order (aggregated or standalone).
 enum ProviderSubState {
   pending,
+  quoted,
   accepted,
   rejected,
   preparing,
@@ -9,6 +10,7 @@ enum ProviderSubState {
 
   String get wireValue => switch (this) {
         ProviderSubState.pending => 'pending',
+        ProviderSubState.quoted => 'quoted',
         ProviderSubState.accepted => 'accepted',
         ProviderSubState.rejected => 'rejected',
         ProviderSubState.preparing => 'preparing',
@@ -20,6 +22,8 @@ enum ProviderSubState {
     switch (raw?.trim().toLowerCase()) {
       case 'accepted':
         return ProviderSubState.accepted;
+      case 'quoted':
+        return ProviderSubState.quoted;
       case 'rejected':
         return ProviderSubState.rejected;
       case 'preparing':
@@ -36,6 +40,7 @@ enum ProviderSubState {
   }
 
   bool get isResponded =>
+      this == ProviderSubState.quoted ||
       this == ProviderSubState.accepted ||
       this == ProviderSubState.rejected ||
       this == ProviderSubState.preparing ||

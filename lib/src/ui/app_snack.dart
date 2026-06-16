@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_fonts.dart';
 import '../theme/app_sizes.dart';
 import '../widgets/custom_text.dart';
+import 'app_snack_insets.dart';
 
 enum AppSnackState { error, warning, success, alert }
 
@@ -11,6 +12,7 @@ abstract final class AppSnack {
   const AppSnack._();
 
   static const Duration _defaultDuration = Duration(seconds: 4);
+  static const double _maxContentHeight = 96;
 
   static Color _backgroundForState(AppSnackState state) {
     return switch (state) {
@@ -36,6 +38,7 @@ abstract final class AppSnack {
     AppSnackState? state,
     Color? backgroundColor,
     Duration? duration,
+    double bottomInset = 0,
   }) {
     if (!context.mounted) return;
 
@@ -45,12 +48,16 @@ abstract final class AppSnack {
         ? Colors.white
         : _foregroundForState(resolvedState);
 
+    final inheritedInset = AppSnackInsets.maybeOf(context)?.bottomInset ?? 0;
+    final resolvedBottomInset = bottomInset > 0 ? bottomInset : inheritedInset;
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
 
-    final Widget content;
+    final Widget innerContent;
     if (title != null && title.isNotEmpty) {
-      content = Row(
+      innerContent = Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (icon != null) ...[
@@ -64,6 +71,8 @@ abstract final class AppSnack {
               children: [
                 CustomText(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: AppFonts.family,
                     color: fg,
@@ -74,6 +83,8 @@ abstract final class AppSnack {
                 const SizedBox(height: AppSizes.spaceXs),
                 CustomText(
                   message,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: AppFonts.family,
                     color: fg,
@@ -88,7 +99,7 @@ abstract final class AppSnack {
         ],
       );
     } else {
-      content = Row(
+      innerContent = Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -100,6 +111,8 @@ abstract final class AppSnack {
             child: CustomText(
               message,
               textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontFamily: AppFonts.family,
                 color: fg,
@@ -113,10 +126,20 @@ abstract final class AppSnack {
       );
     }
 
+    final content = ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: _maxContentHeight),
+      child: innerContent,
+    );
+
     messenger.showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSizes.spaceBase),
+        margin: EdgeInsets.fromLTRB(
+          AppSizes.spaceBase,
+          AppSizes.spaceBase,
+          AppSizes.spaceBase,
+          AppSizes.spaceBase + safeBottom + resolvedBottomInset,
+        ),
         elevation: 4,
         backgroundColor: bg,
         padding: const EdgeInsets.symmetric(

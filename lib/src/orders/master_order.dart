@@ -5,6 +5,9 @@ import '../models/location.dart';
 import 'toukh_firestore_timestamps.dart';
 import 'driver_assignment.dart';
 import 'global_order_status.dart';
+import 'master_order_kind.dart';
+import 'order_cancelled_by_role.dart';
+import 'pharmacy_request_payload.dart';
 import 'provider_order_ref.dart';
 import 'provider_order_slice.dart';
 import 'provider_sub_state.dart';
@@ -30,6 +33,10 @@ class MasterOrder extends Equatable {
     this.note,
     this.providerIds = const [],
     this.providerSlices = const {},
+    this.cancelledByRole,
+    this.orderKind = MasterOrderKind.standard,
+    this.pharmacyRequest,
+    this.selectedProviderId,
     this.createdAt,
     this.updatedAt,
   });
@@ -53,11 +60,17 @@ class MasterOrder extends Equatable {
   final String? note;
   final List<String> providerIds;
   final Map<String, ProviderOrderSlice> providerSlices;
+  final OrderCancelledByRole? cancelledByRole;
+  final MasterOrderKind orderKind;
+  final PharmacyRequestPayload? pharmacyRequest;
+  final String? selectedProviderId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   bool get isAggregated =>
       aggregatedGroupId != null && aggregatedGroupId!.isNotEmpty;
+
+  bool get isPharmacyRequest => orderKind == MasterOrderKind.pharmacyRequest;
 
   bool get allProvidersResponded {
     if (providerStatusMap.isEmpty) return false;
@@ -77,6 +90,10 @@ class MasterOrder extends Equatable {
     bool? ratingCompleted,
     List<String>? providerIds,
     Map<String, ProviderOrderSlice>? providerSlices,
+    OrderCancelledByRole? cancelledByRole,
+    MasterOrderKind? orderKind,
+    PharmacyRequestPayload? pharmacyRequest,
+    String? selectedProviderId,
     DateTime? updatedAt,
   }) {
     return MasterOrder(
@@ -99,6 +116,10 @@ class MasterOrder extends Equatable {
       note: note,
       providerIds: providerIds ?? this.providerIds,
       providerSlices: providerSlices ?? this.providerSlices,
+      cancelledByRole: cancelledByRole ?? this.cancelledByRole,
+      orderKind: orderKind ?? this.orderKind,
+      pharmacyRequest: pharmacyRequest ?? this.pharmacyRequest,
+      selectedProviderId: selectedProviderId ?? this.selectedProviderId,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -128,6 +149,11 @@ class MasterOrder extends Equatable {
         'providerSlices': providerSlices.map(
           (k, v) => MapEntry(k, v.toMap()),
         ),
+        if (cancelledByRole != null)
+          'cancelledByRole': cancelledByRole!.wireValue,
+        'orderKind': orderKind.wireValue,
+        if (pharmacyRequest != null) 'pharmacyRequest': pharmacyRequest!.toMap(),
+        if (selectedProviderId != null) 'selectedProviderId': selectedProviderId,
         if (createdAt != null)
           'createdAt': Timestamp.fromDate(createdAt!),
         if (updatedAt != null)
@@ -194,6 +220,15 @@ class MasterOrder extends Equatable {
       note: map['note'] as String?,
       providerIds: providerIds,
       providerSlices: slices,
+      cancelledByRole:
+          OrderCancelledByRole.fromWire(map['cancelledByRole'] as String?),
+      orderKind: MasterOrderKind.fromWire(map['orderKind'] as String?),
+      pharmacyRequest: map['pharmacyRequest'] is Map
+          ? PharmacyRequestPayload.fromMap(
+              Map<String, dynamic>.from(map['pharmacyRequest'] as Map),
+            )
+          : null,
+      selectedProviderId: map['selectedProviderId'] as String?,
       createdAt: _parseDate(map['createdAt']),
       updatedAt: _parseDate(map['updatedAt']),
     );
@@ -222,6 +257,10 @@ class MasterOrder extends Equatable {
         note,
         providerIds,
         providerSlices,
+        cancelledByRole,
+        orderKind,
+        pharmacyRequest,
+        selectedProviderId,
         createdAt,
         updatedAt,
       ];

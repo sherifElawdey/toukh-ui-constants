@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'fulfillment_mode.dart';
+import 'order_cancelled_by_role.dart';
 import 'provider_sub_state.dart';
 
 class ProviderOrderRef extends Equatable {
@@ -15,6 +16,7 @@ class ProviderOrderRef extends Equatable {
     this.isAggregated = false,
     this.cancelledAt,
     this.cancelReason,
+    this.cancelledByRole,
   });
 
   final String providerId;
@@ -27,6 +29,7 @@ class ProviderOrderRef extends Equatable {
   final bool isAggregated;
   final DateTime? cancelledAt;
   final String? cancelReason;
+  final OrderCancelledByRole? cancelledByRole;
 
   double get totalEgp => orderPriceEgp + deliveryFeeEgp;
 
@@ -36,6 +39,7 @@ class ProviderOrderRef extends Equatable {
     double? deliveryFeeEgp,
     DateTime? cancelledAt,
     String? cancelReason,
+    OrderCancelledByRole? cancelledByRole,
   }) {
     return ProviderOrderRef(
       providerId: providerId,
@@ -48,6 +52,7 @@ class ProviderOrderRef extends Equatable {
       isAggregated: isAggregated,
       cancelledAt: cancelledAt ?? this.cancelledAt,
       cancelReason: cancelReason ?? this.cancelReason,
+      cancelledByRole: cancelledByRole ?? this.cancelledByRole,
     );
   }
 
@@ -62,6 +67,8 @@ class ProviderOrderRef extends Equatable {
         'isAggregated': isAggregated,
         if (cancelledAt != null) 'cancelledAt': cancelledAt!.toIso8601String(),
         if (cancelReason != null) 'cancelReason': cancelReason,
+        if (cancelledByRole != null)
+          'cancelledByRole': cancelledByRole!.wireValue,
       };
 
   factory ProviderOrderRef.fromMap(Map<String, dynamic> map) {
@@ -76,6 +83,8 @@ class ProviderOrderRef extends Equatable {
       isAggregated: map['isAggregated'] as bool? ?? false,
       cancelledAt: _parseDate(map['cancelledAt']),
       cancelReason: map['cancelReason'] as String?,
+      cancelledByRole:
+          OrderCancelledByRole.fromWire(map['cancelledByRole'] as String?),
     );
   }
 
@@ -97,5 +106,6 @@ class ProviderOrderRef extends Equatable {
         isAggregated,
         cancelledAt,
         cancelReason,
+        cancelledByRole,
       ];
 }

@@ -2,8 +2,11 @@ import 'package:equatable/equatable.dart';
 
 import '../models/location.dart';
 import 'fulfillment_mode.dart';
+import 'order_cancelled_by_role.dart';
+import 'pharmacy_quote.dart';
 import 'provider_order_slice_line_item.dart';
 import 'provider_order_status_wire.dart';
+import 'provider_sub_state.dart';
 import 'toukh_firestore_timestamps.dart';
 
 /// Merchant-facing slice embedded in [MasterOrder.providerSlices].
@@ -34,10 +37,15 @@ class ProviderOrderSlice extends Equatable {
     this.deliveredAt,
     this.cancelledAt,
     this.cancelReason,
+    this.cancelledByRole,
     this.items = const [],
     this.courierLateWarningAt,
     this.isAggregated = false,
     this.masterProviderCount = 1,
+    this.pharmacyQuote,
+    this.prescriptionImageUrl,
+    this.providerBrandImageUrl,
+    this.ratingAvg = 0,
   });
 
   final String providerId;
@@ -70,13 +78,22 @@ class ProviderOrderSlice extends Equatable {
   final DateTime? deliveredAt;
   final DateTime? cancelledAt;
   final String? cancelReason;
+  final OrderCancelledByRole? cancelledByRole;
 
   final List<ProviderOrderSliceLineItem> items;
   final DateTime? courierLateWarningAt;
   final bool isAggregated;
   final int masterProviderCount;
+  final PharmacyQuote? pharmacyQuote;
+  final String? prescriptionImageUrl;
+  final String? providerBrandImageUrl;
+  final double ratingAvg;
 
   String get statusWire => ProviderOrderStatusWire.normalize(status);
+
+  bool get isQuoted =>
+      providerState == ProviderSubState.quoted.wireValue ||
+      statusWire == ProviderOrderStatusWire.quoted;
 
   bool get isGroupOrder => masterProviderCount > 1;
   bool get isStoreDelivery => fulfillmentMode == FulfillmentMode.store;
@@ -138,11 +155,22 @@ class ProviderOrderSlice extends Equatable {
           ToukhFirestoreTimestamps.toDateTime(m['completedAt']),
       cancelledAt: ToukhFirestoreTimestamps.toDateTime(m['cancelledAt']),
       cancelReason: _string(m['cancelReason']),
+      cancelledByRole:
+          OrderCancelledByRole.fromWire(m['cancelledByRole'] as String?),
       items: items,
       courierLateWarningAt:
           ToukhFirestoreTimestamps.toDateTime(m['courierLateWarningAt']),
       isAggregated: m['isAggregated'] == true,
       masterProviderCount: _int(m['masterProviderCount']) ?? 1,
+      pharmacyQuote: m['pharmacyQuote'] is Map
+          ? PharmacyQuote.fromMap(
+              Map<String, dynamic>.from(m['pharmacyQuote'] as Map),
+            )
+          : null,
+      prescriptionImageUrl: _string(m['prescriptionImageUrl']),
+      providerBrandImageUrl: _string(m['brandImageUrl']) ??
+          _string(m['providerBrandImageUrl']),
+      ratingAvg: _double(m['ratingAvg']) ?? 0,
     );
   }
 
@@ -174,11 +202,19 @@ class ProviderOrderSlice extends Equatable {
         if (deliveredAt != null) 'deliveredAt': deliveredAt!.toIso8601String(),
         if (cancelledAt != null) 'cancelledAt': cancelledAt!.toIso8601String(),
         if (cancelReason != null) 'cancelReason': cancelReason,
+        if (cancelledByRole != null)
+          'cancelledByRole': cancelledByRole!.wireValue,
         'items': items.map((e) => e.toMap()).toList(),
         if (courierLateWarningAt != null)
           'courierLateWarningAt': courierLateWarningAt!.toIso8601String(),
         'isAggregated': isAggregated,
         'masterProviderCount': masterProviderCount,
+        if (pharmacyQuote != null) 'pharmacyQuote': pharmacyQuote!.toMap(),
+        if (prescriptionImageUrl != null)
+          'prescriptionImageUrl': prescriptionImageUrl,
+        if (providerBrandImageUrl != null)
+          'brandImageUrl': providerBrandImageUrl,
+        if (ratingAvg > 0) 'ratingAvg': ratingAvg,
       };
 
   static Location? _location(dynamic v) {
@@ -230,9 +266,14 @@ class ProviderOrderSlice extends Equatable {
         deliveredAt,
         cancelledAt,
         cancelReason,
+        cancelledByRole,
         items,
         courierLateWarningAt,
         isAggregated,
         masterProviderCount,
+        pharmacyQuote,
+        prescriptionImageUrl,
+        providerBrandImageUrl,
+        ratingAvg,
       ];
 }

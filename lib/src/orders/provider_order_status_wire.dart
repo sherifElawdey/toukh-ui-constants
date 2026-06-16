@@ -14,6 +14,7 @@ abstract final class ProviderOrderStatusWire {
   static const delivered = 'delivered';
   static const cancelled = 'cancelled';
   static const completed = 'completed';
+  static const quoted = 'quoted';
 
   static String normalize(String? raw) {
     final v = raw?.trim().toLowerCase().replaceAll('-', '_') ?? placed;
@@ -24,7 +25,7 @@ abstract final class ProviderOrderStatusWire {
 
   static bool isIncoming(String wire) {
     final w = normalize(wire);
-    return w == placed || w == pending;
+    return w == placed || w == pending || w == quoted;
   }
 
   static bool isInProgress(String wire) {

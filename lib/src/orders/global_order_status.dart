@@ -1,6 +1,7 @@
 /// Customer-visible master order status.
 enum GlobalOrderStatus {
   pending,
+  awaitingPharmacySelection,
   preparing,
   driverAssigned,
   partiallyPicked,
@@ -11,6 +12,8 @@ enum GlobalOrderStatus {
 
   String get wireValue => switch (this) {
         GlobalOrderStatus.pending => 'pending',
+        GlobalOrderStatus.awaitingPharmacySelection =>
+          'awaiting_pharmacy_selection',
         GlobalOrderStatus.preparing => 'preparing',
         GlobalOrderStatus.driverAssigned => 'driver_assigned',
         GlobalOrderStatus.partiallyPicked => 'partially_picked',
@@ -25,6 +28,8 @@ enum GlobalOrderStatus {
       case 'pending':
       case 'placed':
         return GlobalOrderStatus.pending;
+      case 'awaiting_pharmacy_selection':
+        return GlobalOrderStatus.awaitingPharmacySelection;
       case 'preparing':
         return GlobalOrderStatus.preparing;
       case 'driver_assigned':
@@ -49,5 +54,9 @@ enum GlobalOrderStatus {
   }
 
   bool get isTerminal =>
-      this == GlobalOrderStatus.delivered || this == GlobalOrderStatus.cancelled;
+      this == GlobalOrderStatus.delivered ||
+      this == GlobalOrderStatus.cancelled;
+
+  bool get isAwaitingPharmacySelection =>
+      this == GlobalOrderStatus.awaitingPharmacySelection;
 }
