@@ -37,6 +37,8 @@ class MasterOrder extends Equatable {
     this.orderKind = MasterOrderKind.standard,
     this.pharmacyRequest,
     this.selectedProviderId,
+    this.customerName,
+    this.customerPhone,
     this.createdAt,
     this.updatedAt,
   });
@@ -64,6 +66,8 @@ class MasterOrder extends Equatable {
   final MasterOrderKind orderKind;
   final PharmacyRequestPayload? pharmacyRequest;
   final String? selectedProviderId;
+  final String? customerName;
+  final String? customerPhone;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -94,6 +98,8 @@ class MasterOrder extends Equatable {
     MasterOrderKind? orderKind,
     PharmacyRequestPayload? pharmacyRequest,
     String? selectedProviderId,
+    String? customerName,
+    String? customerPhone,
     DateTime? updatedAt,
   }) {
     return MasterOrder(
@@ -120,6 +126,8 @@ class MasterOrder extends Equatable {
       orderKind: orderKind ?? this.orderKind,
       pharmacyRequest: pharmacyRequest ?? this.pharmacyRequest,
       selectedProviderId: selectedProviderId ?? this.selectedProviderId,
+      customerName: customerName ?? this.customerName,
+      customerPhone: customerPhone ?? this.customerPhone,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -154,6 +162,8 @@ class MasterOrder extends Equatable {
         'orderKind': orderKind.wireValue,
         if (pharmacyRequest != null) 'pharmacyRequest': pharmacyRequest!.toMap(),
         if (selectedProviderId != null) 'selectedProviderId': selectedProviderId,
+        if (customerName != null) 'customerName': customerName,
+        if (customerPhone != null) 'customerPhone': customerPhone,
         if (createdAt != null)
           'createdAt': Timestamp.fromDate(createdAt!),
         if (updatedAt != null)
@@ -229,6 +239,8 @@ class MasterOrder extends Equatable {
             )
           : null,
       selectedProviderId: map['selectedProviderId'] as String?,
+      customerName: map['customerName'] as String?,
+      customerPhone: map['customerPhone'] as String?,
       createdAt: _parseDate(map['createdAt']),
       updatedAt: _parseDate(map['updatedAt']),
     );
@@ -261,6 +273,8 @@ class MasterOrder extends Equatable {
         orderKind,
         pharmacyRequest,
         selectedProviderId,
+        customerName,
+        customerPhone,
         createdAt,
         updatedAt,
       ];

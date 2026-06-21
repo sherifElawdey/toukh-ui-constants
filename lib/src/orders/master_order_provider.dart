@@ -1,6 +1,7 @@
 import 'master_order.dart';
 import 'provider_order_slice.dart';
 import 'provider_order_status_wire.dart';
+import 'provider_sub_state.dart';
 
 /// Visual urgency for incoming orders based on wait time since placement.
 enum IncomingOrderUrgency { normal, warning, critical }
@@ -17,9 +18,13 @@ extension MasterOrderProviderX on MasterOrder {
   bool includesProvider(String providerId) =>
       providerOrderRefs.any((r) => r.providerId == providerId);
 
-  /// Membership in both [providerOrderRefs] and [providerSlices].
-  bool hasProviderSlice(String providerId) =>
-      includesProvider(providerId) && providerSlices.containsKey(providerId);
+  /// Membership in [providerSlices]; pharmacy broadcasts may omit refs until quote.
+  bool hasProviderSlice(String providerId) {
+    if (!providerSlices.containsKey(providerId)) return false;
+    if (isPharmacyRequest && includesProvider(providerId)) return true;
+    if (isPharmacyRequest && providerIds.contains(providerId)) return true;
+    return includesProvider(providerId);
+  }
 
   bool isActiveForProvider(String providerId) {
     if (globalStatus.isTerminal) return false;
@@ -126,6 +131,38 @@ class ProviderMasterOrderRow {
       slice: slice,
     );
   }
+
+  bool get canViewCustomerContact =>
+      providerCanViewCustomerContact(master, slice);
+}
+
+/// Whether a provider may see customer name/phone for [slice] on [master].
+bool providerCanViewCustomerContact(
+  MasterOrder master,
+  ProviderOrderSlice slice,
+) {
+  if (!master.isPharmacyRequest) return true;
+  final ps = ProviderSubState.fromWire(slice.providerState);
+  return ps == ProviderSubState.preparing ||
+      ps == ProviderSubState.accepted ||
+      ps == ProviderSubState.readyForPickup ||
+      ps == ProviderSubState.pickedUp;
+}
+
+/// Display name for provider UI — generic label when contact is hidden.
+String providerDisplayCustomerName(
+  MasterOrder master,
+  ProviderOrderSlice slice, {
+  required String genericLabel,
+}) {
+  if (!providerCanViewCustomerContact(master, slice)) {
+    return genericLabel;
+  }
+  return slice.customerName?.trim().isNotEmpty == true
+      ? slice.customerName!.trim()
+      : master.customerName?.trim().isNotEmpty == true
+          ? master.customerName!.trim()
+          : genericLabel;
 }
 
 abstract final class ProviderMasterOrderTabFilters {
