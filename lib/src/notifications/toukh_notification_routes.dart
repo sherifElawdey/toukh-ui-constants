@@ -9,6 +9,8 @@ abstract final class ToukhNotificationRoutes {
   static String consumerOrderDetail(String masterOrderId) =>
       '/orders/$masterOrderId';
 
+  static const consumerHomeServiceRequestDetail = '/home-service-request-detail';
+
   // Provider (toukh_provider)
   static const providerOrders = '/orders';
   static const providerNotifications = '/notifications';

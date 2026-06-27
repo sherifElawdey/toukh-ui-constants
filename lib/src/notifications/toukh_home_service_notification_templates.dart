@@ -13,6 +13,9 @@ abstract final class ToukhHomeServiceNotificationTemplates {
   static String providerNewRequestNotificationId(String requestId) =>
       'home_service_request_$requestId';
 
+  static String customerQuoteNotificationId(String requestId) =>
+      'home_service_quote_$requestId';
+
   static String homeServiceRequestsCollection() => _kCollection;
 
   static ToukhNotificationTemplate buildProviderNewRequestTemplate({
@@ -74,6 +77,41 @@ abstract final class ToukhHomeServiceNotificationTemplates {
     );
   }
 
+  static ToukhNotificationTemplate buildCustomerQuoteTemplate({
+    required Map<String, dynamic> request,
+    required String requestId,
+    String? providerImageUrl,
+  }) {
+    final providerName = _string(request['providerName']) ?? 'Provider';
+    final quotedPrice = _toDouble(request['quotedPriceEgp']);
+    final categoryTitle = _string(request['categoryTitle']) ?? 'Home service';
+
+    final lines = <String>[categoryTitle];
+    if (quotedPrice != null) {
+      lines.add('Price: ${quotedPrice.round()} EGP');
+    }
+    final scheduledRaw = request['scheduledAt'];
+    if (scheduledRaw is DateTime) {
+      lines.add('Visit: ${scheduledRaw.toLocal()}');
+    }
+
+    return ToukhNotificationTemplate(
+      title: 'Quote from $providerName',
+      description: lines.join('\n'),
+      imageUrl: providerImageUrl ?? _string(request['providerImageUrl']),
+      type: ToukhHomeServiceNotificationTypes.homeServiceQuoteReceived,
+      category: ToukhNotificationCategory.homeService,
+      rootRoute: ToukhNotificationRoutes.consumerHomeServiceRequestDetail,
+      payload: {
+        'requestId': requestId,
+        'providerId': _string(request['providerId']),
+        'providerName': providerName,
+        if (quotedPrice != null) 'quotedPriceEgp': quotedPrice,
+        'categoryTitle': categoryTitle,
+      },
+    );
+  }
+
   static String _formatDescription({
     required String categoryTitle,
     String? note,
@@ -88,6 +126,14 @@ abstract final class ToukhHomeServiceNotificationTemplates {
 
   static String? _string(dynamic v) {
     if (v is String && v.trim().isNotEmpty) return v.trim();
+    return null;
+  }
+
+  static double? _toDouble(dynamic v) {
+    if (v is num) return v.toDouble();
+    if (v is String && v.trim().isNotEmpty) {
+      return double.tryParse(v.trim());
+    }
     return null;
   }
 }

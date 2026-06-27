@@ -297,6 +297,73 @@ class ToukhInboxNotificationWriter {
     }
   }
 
+  /// Idempotent customer home-service quote inbox row (sets customerQuoteNotifiedAt).
+  Future<String?> deliverCustomerHomeServiceQuoteIfNeeded({
+    required String requestId,
+    String? providerImageUrl,
+  }) async {
+    try {
+      return await _firestore.runTransaction((tx) async {
+        final requestRef = _homeServiceRequestRef(requestId);
+        final requestSnap = await tx.get(requestRef);
+        if (!requestSnap.exists) return null;
+
+        final requestData = Map<String, dynamic>.from(requestSnap.data() ?? {});
+        if (requestData['customerQuoteNotifiedAt'] != null) return null;
+
+        final status = (requestData['status'] as String? ?? '').trim().toLowerCase();
+        if (status != 'awaiting_customer') return null;
+
+        final userId = requestData['userId']?.toString();
+        if (userId == null || userId.isEmpty) return null;
+
+        final scheduledTs = requestData['scheduledAt'];
+        final merged = Map<String, dynamic>.from(requestData);
+        if (scheduledTs is Timestamp) {
+          merged['scheduledAt'] = scheduledTs.toDate();
+        }
+
+        final template =
+            ToukhHomeServiceNotificationTemplates.buildCustomerQuoteTemplate(
+          request: merged,
+          requestId: requestId,
+          providerImageUrl: providerImageUrl,
+        );
+
+        final notificationId =
+            ToukhHomeServiceNotificationTemplates.customerQuoteNotificationId(
+          requestId,
+        );
+        final inboxRef = _inboxRef(
+          ToukhNotificationRecipient.customer,
+          userId,
+        ).doc(notificationId);
+
+        final existingInbox = await tx.get(inboxRef);
+        if (existingInbox.exists) {
+          tx.update(requestRef, {
+            'customerQuoteNotifiedAt': FieldValue.serverTimestamp(),
+          });
+          return null;
+        }
+
+        final doc = ToukhNotificationMapper.toFirestore(template);
+        doc['createdAt'] = FieldValue.serverTimestamp();
+        tx.set(inboxRef, doc);
+        tx.update(requestRef, {
+          'customerQuoteNotifiedAt': FieldValue.serverTimestamp(),
+        });
+
+        return inboxRef.id;
+      });
+    } catch (e, st) {
+      debugPrint(
+        'ToukhInboxNotificationWriter.deliverCustomerHomeServiceQuoteIfNeeded failed: $e\n$st',
+      );
+      return null;
+    }
+  }
+
   /// Best-effort provider profile image for customer notifications.
   Future<String?> fetchProviderImageUrl(String providerId) async {
     try {
