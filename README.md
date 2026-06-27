@@ -55,6 +55,6 @@ flutter run \
   --dart-define=TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxx
 ```
 
-When all three are non-empty, consumer/provider/delivery apps register `TwilioVerifyOtpRepository`; otherwise they fall back to an in-memory stub. In the Twilio Console, configure your Verify Service for **WhatsApp** delivery if you want WhatsApp-first OTP; otherwise the client falls back to SMS.
+When all three are non-empty, consumer/provider/delivery apps register `TwilioVerifyOtpRepository`; otherwise they fall back to an in-memory stub. Configure your Verify Service for **WhatsApp** (bring your own sender) and enable **Egypt (+20)** geo permissions. `TwilioVerifyClient` sends with `channel=whatsapp` and SMS fallback via `ChannelConfiguration`; if that is rejected, it retries SMS only.
 
 **Security note:** calling Verify from the mobile app is convenient but credentials can be extracted from the app binary. For production hardening, prefer a backend or Cloud Function that holds the Auth Token.

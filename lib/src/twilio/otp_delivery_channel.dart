@@ -2,4 +2,7 @@
 enum OtpDeliveryChannel {
   whatsapp,
   sms,
+
+  /// WhatsApp-first with automatic SMS fallback (Twilio ChannelConfiguration).
+  whatsappOrSms,
 }

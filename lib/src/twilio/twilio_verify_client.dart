@@ -74,33 +74,51 @@ class TwilioVerifyClient {
     return 'HTTP ${r.statusCode}';
   }
 
-  /// Sends a verification code. Tries WhatsApp first, then SMS on failure.
+  static final _whatsappSmsChannelConfig = jsonEncode({
+    'whatsapp': {'enabled': true},
+    'sms': {'enabled': true},
+  });
+
+  /// Sends a verification code via WhatsApp with automatic SMS fallback.
   Future<TwilioSendResult> sendVerification(String toE164) async {
     final to = normalizeToE164(toE164);
-    for (final channel in [
-      OtpDeliveryChannel.whatsapp,
-      OtpDeliveryChannel.sms,
-    ]) {
-      final r = await _postForm(_verificationsUri(), {
-        'To': to,
-        'Channel': channel.name,
-      });
-      if (r.statusCode >= 200 && r.statusCode < 300) {
-        String? sid;
-        try {
-          final m = jsonDecode(r.body);
-          if (m is Map<String, dynamic>) {
-            sid = m['sid'] as String?;
-          }
-        } catch (_) {}
-        return TwilioSendResult(channel: channel, verificationSid: sid);
-      }
-      if (channel == OtpDeliveryChannel.whatsapp) {
-        continue;
-      }
-      throw Exception(_twilioMessage(r));
+
+    final whatsappWithFallback = await _postForm(_verificationsUri(), {
+      'To': to,
+      'Channel': 'whatsapp',
+      'ChannelConfiguration': _whatsappSmsChannelConfig,
+    });
+    if (whatsappWithFallback.statusCode >= 200 &&
+        whatsappWithFallback.statusCode < 300) {
+      return TwilioSendResult(
+        channel: OtpDeliveryChannel.whatsappOrSms,
+        verificationSid: _verificationSid(whatsappWithFallback),
+      );
     }
-    throw Exception('Twilio Verify: could not send code.');
+
+    // Defensive fallback when ChannelConfiguration is rejected (e.g. no WhatsApp sender).
+    final smsOnly = await _postForm(_verificationsUri(), {
+      'To': to,
+      'Channel': 'sms',
+    });
+    if (smsOnly.statusCode >= 200 && smsOnly.statusCode < 300) {
+      return TwilioSendResult(
+        channel: OtpDeliveryChannel.sms,
+        verificationSid: _verificationSid(smsOnly),
+      );
+    }
+
+    throw Exception(_twilioMessage(smsOnly));
+  }
+
+  static String? _verificationSid(http.Response r) {
+    try {
+      final m = jsonDecode(r.body);
+      if (m is Map<String, dynamic>) {
+        return m['sid'] as String?;
+      }
+    } catch (_) {}
+    return null;
   }
 
   /// Validates the OTP for [toE164]. Throws if not approved.
