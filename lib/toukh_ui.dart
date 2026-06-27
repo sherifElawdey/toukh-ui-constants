@@ -58,6 +58,8 @@ export 'src/notifications/toukh_fcm_data_keys.dart';
 export 'src/notifications/toukh_fcm_token_sync.dart';
 export 'src/notifications/toukh_fcm_apns.dart';
 export 'src/notifications/toukh_inbox_notification_writer.dart';
+export 'src/notifications/toukh_home_service_notification_templates.dart';
+export 'src/notifications/toukh_home_service_notification_types.dart';
 export 'src/notifications/toukh_order_notification_templates.dart';
 export 'src/notifications/toukh_notification_category.dart';
 export 'src/notifications/toukh_notification_style.dart';

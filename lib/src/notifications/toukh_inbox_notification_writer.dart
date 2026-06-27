@@ -6,6 +6,7 @@ import 'toukh_notification.dart';
 import 'toukh_notification_mapper.dart';
 import 'toukh_notification_paths.dart';
 import 'toukh_notification_recipient.dart';
+import 'toukh_home_service_notification_templates.dart';
 import 'toukh_order_notification_templates.dart';
 
 /// Client-side inbox delivery (Spark fallback when Cloud Functions are unavailable).
@@ -222,6 +223,75 @@ class ToukhInboxNotificationWriter {
     } catch (e, st) {
       debugPrint(
         'ToukhInboxNotificationWriter._deliverCustomerStatusGuarded failed: $e\n$st',
+      );
+      return null;
+    }
+  }
+
+  DocumentReference<Map<String, dynamic>> _homeServiceRequestRef(
+    String requestId,
+  ) =>
+      _firestore
+          .collection(ToukhHomeServiceNotificationTemplates.homeServiceRequestsCollection())
+          .doc(requestId);
+
+  /// Idempotent provider new home-service request inbox row (sets providerNotifiedAt).
+  Future<String?> deliverProviderHomeServiceRequestIfNeeded({
+    required String providerId,
+    required String requestId,
+    Map<String, dynamic>? request,
+    String? customerPhotoUrl,
+  }) async {
+    try {
+      return await _firestore.runTransaction((tx) async {
+        final requestRef = _homeServiceRequestRef(requestId);
+        final requestSnap = await tx.get(requestRef);
+        if (!requestSnap.exists) return null;
+
+        final requestData = Map<String, dynamic>.from(requestSnap.data() ?? {});
+        if (requestData['providerNotifiedAt'] != null) return null;
+
+        final docProviderId = requestData['providerId']?.toString();
+        if (docProviderId != providerId) return null;
+
+        final merged = {...requestData, if (request != null) ...request};
+        final template =
+            ToukhHomeServiceNotificationTemplates.buildProviderNewRequestTemplate(
+          request: merged,
+          providerId: providerId,
+          requestId: requestId,
+          customerPhotoUrl: customerPhotoUrl,
+        );
+
+        final notificationId =
+            ToukhHomeServiceNotificationTemplates.providerNewRequestNotificationId(
+          requestId,
+        );
+        final inboxRef = _inboxRef(
+          ToukhNotificationRecipient.provider,
+          providerId,
+        ).doc(notificationId);
+
+        final existingInbox = await tx.get(inboxRef);
+        if (existingInbox.exists) {
+          tx.update(requestRef, {
+            'providerNotifiedAt': FieldValue.serverTimestamp(),
+          });
+          return null;
+        }
+
+        final doc = ToukhNotificationMapper.toFirestore(template);
+        doc['createdAt'] = FieldValue.serverTimestamp();
+        tx.set(inboxRef, doc);
+        tx.update(requestRef, {
+          'providerNotifiedAt': FieldValue.serverTimestamp(),
+        });
+
+        return inboxRef.id;
+      });
+    } catch (e, st) {
+      debugPrint(
+        'ToukhInboxNotificationWriter.deliverProviderHomeServiceRequestIfNeeded failed: $e\n$st',
       );
       return null;
     }

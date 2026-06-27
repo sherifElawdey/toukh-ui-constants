@@ -10,6 +10,11 @@ void onToukhMapCreated(String screen, GoogleMapController controller) {
     'If tiles stay gray, check docs/google-maps-setup.md '
     '(APIs enabled, billing, key restrictions for this app package/bundle).',
   );
+  debugPrint(
+    'Android: if pin shows but map is blank, search logcat for '
+    '"GoogleCertificatesRslt: not allowed" — add package + debug SHA-1 to the '
+    'Android Maps API key in GCP (see docs/google-maps-setup.md §3).',
+  );
   if (kIsWeb) {
     debugPrint(
       'Web: open DevTools → Console for gm_authFailure / RefererNotAllowedMapError.',

@@ -15,6 +15,9 @@ abstract final class ToukhNotificationRoutes {
 
   static String providerOrderDetail(String orderId) => '$providerOrders/$orderId';
 
+  static String providerHomeServiceRequestDetail(String requestId) =>
+      '/home-service-request/$requestId';
+
   // Driver (toukh_delivery)
   static const driverOrders = '/orders';
   static const driverNotifications = '/notifications';
