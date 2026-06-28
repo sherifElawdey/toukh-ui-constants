@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_fonts.dart';
 import 'app_sizes.dart';
+import 'glass_tokens.dart';
 
 ThemeData buildAppTheme() {
   final baseScheme = ColorScheme.light(
@@ -25,6 +26,27 @@ ThemeData buildAppTheme() {
     useMaterial3: true,
     scaffoldBackgroundColor: AppColors.surface,
     cardColor: Colors.white,
+    dialogTheme: DialogThemeData(
+      backgroundColor: Colors.white.withValues(alpha: 0.92),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(GlassTokens.radiusSheet),
+      ),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: Colors.white.withValues(alpha: 0.92),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(GlassTokens.radiusSheet),
+        ),
+      ),
+    ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+      },
+    ),
 
     appBarTheme: AppBarTheme(
       centerTitle: true,
@@ -142,6 +164,27 @@ ThemeData buildAppDarkTheme() {
     useMaterial3: true,
     scaffoldBackgroundColor: baseScheme.surface,
     cardColor: const Color(0xFF1E2B35),
+    dialogTheme: DialogThemeData(
+      backgroundColor: const Color(0xFF1E2B35).withValues(alpha: 0.95),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(GlassTokens.radiusSheet),
+      ),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: const Color(0xFF1E2B35).withValues(alpha: 0.95),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(GlassTokens.radiusSheet),
+        ),
+      ),
+    ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+      },
+    ),
     appBarTheme: AppBarTheme(
       centerTitle: true,
       scrolledUnderElevation: 0,
