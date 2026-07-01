@@ -1,7 +1,8 @@
 /// How fulfillment is handled for a provider order.
 enum FulfillmentMode {
   store,
-  courier;
+  courier,
+  pickup;
 
   String get wireValue => name;
 
@@ -10,6 +11,9 @@ enum FulfillmentMode {
       case 'store':
       case 'internal':
         return FulfillmentMode.store;
+      case 'pickup':
+      case 'explore':
+        return FulfillmentMode.pickup;
       case 'courier':
       case 'external':
       default:

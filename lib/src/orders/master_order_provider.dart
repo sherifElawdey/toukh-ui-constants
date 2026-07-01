@@ -1,3 +1,4 @@
+import 'fulfillment_mode.dart';
 import 'master_order.dart';
 import 'provider_order_slice.dart';
 import 'provider_order_status_wire.dart';
@@ -42,6 +43,7 @@ extension MasterOrderProviderX on MasterOrder {
 
 extension ProviderOrderSliceActionsX on ProviderOrderSlice {
   bool get canRequestDelivery =>
+      fulfillmentMode != FulfillmentMode.pickup &&
       !isAggregated &&
       !isStoreDelivery &&
       !hasAssignedDriver &&

@@ -10,6 +10,7 @@ class ProviderOrderSliceLineItem extends Equatable {
     this.quantityText,
     this.description,
     this.imageUrl,
+    this.serviceType,
   });
 
   final String? itemId;
@@ -20,6 +21,9 @@ class ProviderOrderSliceLineItem extends Equatable {
   final String? quantityText;
   final String? description;
   final String? imageUrl;
+  final String? serviceType;
+
+  bool get isExplore => serviceType == 'explore';
 
   String get displayQuantity => quantityText?.trim().isNotEmpty == true
       ? quantityText!.trim()
@@ -46,6 +50,7 @@ class ProviderOrderSliceLineItem extends Equatable {
       quantityText: _string(m['quantityText']),
       description: _string(m['description']) ?? _string(m['nameDescription']),
       imageUrl: _string(m['imageUrl']),
+      serviceType: _string(m['serviceType']),
     );
   }
 
@@ -58,6 +63,7 @@ class ProviderOrderSliceLineItem extends Equatable {
         if (quantityText != null) 'quantityText': quantityText,
         if (description != null) 'description': description,
         if (imageUrl != null) 'imageUrl': imageUrl,
+        if (serviceType != null) 'serviceType': serviceType,
       };
 
   static String? _string(dynamic v) {
@@ -87,5 +93,6 @@ class ProviderOrderSliceLineItem extends Equatable {
         quantityText,
         description,
         imageUrl,
+        serviceType,
       ];
 }

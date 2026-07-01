@@ -27,6 +27,26 @@ void main() {
       expect(plan.subtotalEgp, 100);
     });
 
+    test('explore lines have no delivery task or fee', () {
+      final plan = OrderSplittingEngine.plan(
+        lines: const [
+          CartLineForSplit(
+            providerId: 'system',
+            itemId: 'e1',
+            title: 'Explore item',
+            quantity: 2,
+            unitPrice: 25,
+            serviceType: 'explore',
+          ),
+        ],
+        providerConfigs: const {},
+      );
+      expect(plan.needsDeliveryTask, isFalse);
+      expect(plan.deliveryFeeEgp, 0);
+      expect(plan.providerOrders.single.fulfillmentMode, FulfillmentMode.pickup);
+      expect(plan.subtotalEgp, 50);
+    });
+
     test('multi provider all courier aggregates', () {
       final plan = OrderSplittingEngine.plan(
         lines: const [
