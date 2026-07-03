@@ -1,3 +1,4 @@
+import '../models/location.dart';
 import 'fulfillment_mode.dart';
 import 'master_order.dart';
 import 'provider_order_slice.dart';
@@ -165,6 +166,27 @@ String providerDisplayCustomerName(
       : master.customerName?.trim().isNotEmpty == true
           ? master.customerName!.trim()
           : genericLabel;
+}
+
+/// Customer photo for provider UI — null when contact is hidden.
+String? providerDisplayCustomerPhotoUrl(
+  MasterOrder master,
+  ProviderOrderSlice slice,
+) {
+  if (!providerCanViewCustomerContact(master, slice)) return null;
+  final fromSlice = slice.customerPhotoUrl?.trim();
+  if (fromSlice != null && fromSlice.isNotEmpty) return fromSlice;
+  final fromMaster = master.customerPhotoUrl?.trim();
+  if (fromMaster != null && fromMaster.isNotEmpty) return fromMaster;
+  return null;
+}
+
+/// Delivery location for provider UI (slice first, then master).
+Location providerDisplayDeliveryAddress(
+  MasterOrder master,
+  ProviderOrderSlice slice,
+) {
+  return slice.deliveryAddress ?? master.deliveryAddress;
 }
 
 abstract final class ProviderMasterOrderTabFilters {

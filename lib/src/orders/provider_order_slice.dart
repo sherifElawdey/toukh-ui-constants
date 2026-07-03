@@ -19,6 +19,7 @@ class ProviderOrderSlice extends Equatable {
     this.customerId,
     this.customerName,
     this.customerPhone,
+    this.customerPhotoUrl,
     this.customerFcmToken,
     this.storeLocation,
     this.deliveryAddress,
@@ -56,6 +57,7 @@ class ProviderOrderSlice extends Equatable {
   final String? customerId;
   final String? customerName;
   final String? customerPhone;
+  final String? customerPhotoUrl;
   final String? customerFcmToken;
 
   final Location? storeLocation;
@@ -133,6 +135,8 @@ class ProviderOrderSlice extends Equatable {
       customerId: _string(m['customerId']) ?? _string(m['clientId']),
       customerName: _string(m['customerName']) ?? _string(m['clientName']),
       customerPhone: _string(m['customerPhone']) ?? _string(m['clientPhone']),
+      customerPhotoUrl: _string(m['customerPhotoUrl']) ??
+          _string(m['clientPhotoUrl']),
       customerFcmToken: _string(m['customerFcmToken']),
       storeLocation: _location(m['storeLocation']),
       deliveryAddress: _location(m['deliveryAddress']) ??
@@ -181,6 +185,7 @@ class ProviderOrderSlice extends Equatable {
         if (customerId != null) 'customerId': customerId,
         if (customerName != null) 'customerName': customerName,
         if (customerPhone != null) 'customerPhone': customerPhone,
+        if (customerPhotoUrl != null) 'customerPhotoUrl': customerPhotoUrl,
         if (customerFcmToken != null) 'customerFcmToken': customerFcmToken,
         if (storeLocation != null) 'storeLocation': storeLocation!.toMap(),
         if (deliveryAddress != null) 'deliveryAddress': deliveryAddress!.toMap(),
@@ -248,6 +253,7 @@ class ProviderOrderSlice extends Equatable {
         customerId,
         customerName,
         customerPhone,
+        customerPhotoUrl,
         customerFcmToken,
         storeLocation,
         deliveryAddress,

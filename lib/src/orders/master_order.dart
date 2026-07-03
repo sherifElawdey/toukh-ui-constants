@@ -39,6 +39,7 @@ class MasterOrder extends Equatable {
     this.selectedProviderId,
     this.customerName,
     this.customerPhone,
+    this.customerPhotoUrl,
     this.createdAt,
     this.updatedAt,
   });
@@ -68,6 +69,7 @@ class MasterOrder extends Equatable {
   final String? selectedProviderId;
   final String? customerName;
   final String? customerPhone;
+  final String? customerPhotoUrl;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -100,6 +102,7 @@ class MasterOrder extends Equatable {
     String? selectedProviderId,
     String? customerName,
     String? customerPhone,
+    String? customerPhotoUrl,
     DateTime? updatedAt,
   }) {
     return MasterOrder(
@@ -128,6 +131,7 @@ class MasterOrder extends Equatable {
       selectedProviderId: selectedProviderId ?? this.selectedProviderId,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
+      customerPhotoUrl: customerPhotoUrl ?? this.customerPhotoUrl,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -164,6 +168,7 @@ class MasterOrder extends Equatable {
         if (selectedProviderId != null) 'selectedProviderId': selectedProviderId,
         if (customerName != null) 'customerName': customerName,
         if (customerPhone != null) 'customerPhone': customerPhone,
+        if (customerPhotoUrl != null) 'customerPhotoUrl': customerPhotoUrl,
         if (createdAt != null)
           'createdAt': Timestamp.fromDate(createdAt!),
         if (updatedAt != null)
@@ -241,6 +246,7 @@ class MasterOrder extends Equatable {
       selectedProviderId: map['selectedProviderId'] as String?,
       customerName: map['customerName'] as String?,
       customerPhone: map['customerPhone'] as String?,
+      customerPhotoUrl: map['customerPhotoUrl'] as String?,
       createdAt: _parseDate(map['createdAt']),
       updatedAt: _parseDate(map['updatedAt']),
     );
@@ -275,6 +281,7 @@ class MasterOrder extends Equatable {
         selectedProviderId,
         customerName,
         customerPhone,
+        customerPhotoUrl,
         createdAt,
         updatedAt,
       ];

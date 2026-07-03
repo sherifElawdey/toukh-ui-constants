@@ -4,4 +4,5 @@ abstract final class ToukhHomeServiceNotificationTypes {
 
   static const homeServiceRequestPlaced = 'home_service_request_placed';
   static const homeServiceQuoteReceived = 'home_service_quote_received';
+  static const homeServiceProviderEnRoute = 'home_service_provider_en_route';
 }

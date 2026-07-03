@@ -16,6 +16,9 @@ abstract final class ToukhHomeServiceNotificationTemplates {
   static String customerQuoteNotificationId(String requestId) =>
       'home_service_quote_$requestId';
 
+  static String customerOnMyWayNotificationId(String requestId) =>
+      'home_service_on_my_way_$requestId';
+
   static String homeServiceRequestsCollection() => _kCollection;
 
   static ToukhNotificationTemplate buildProviderNewRequestTemplate({
@@ -107,6 +110,36 @@ abstract final class ToukhHomeServiceNotificationTemplates {
         'providerId': _string(request['providerId']),
         'providerName': providerName,
         if (quotedPrice != null) 'quotedPriceEgp': quotedPrice,
+        'categoryTitle': categoryTitle,
+      },
+    );
+  }
+
+  static ToukhNotificationTemplate buildCustomerOnMyWayTemplate({
+    required Map<String, dynamic> request,
+    required String requestId,
+    String? providerImageUrl,
+  }) {
+    final providerName = _string(request['providerName']) ?? 'Provider';
+    final categoryTitle = _string(request['categoryTitle']) ?? 'Home service';
+
+    final lines = <String>[categoryTitle, '$providerName is on the way'];
+    final scheduledRaw = request['scheduledAt'];
+    if (scheduledRaw is DateTime) {
+      lines.add('Visit: ${scheduledRaw.toLocal()}');
+    }
+
+    return ToukhNotificationTemplate(
+      title: '$providerName is on the way',
+      description: lines.join('\n'),
+      imageUrl: providerImageUrl ?? _string(request['providerImageUrl']),
+      type: ToukhHomeServiceNotificationTypes.homeServiceProviderEnRoute,
+      category: ToukhNotificationCategory.homeService,
+      rootRoute: ToukhNotificationRoutes.consumerHomeServiceRequestDetail,
+      payload: {
+        'requestId': requestId,
+        'providerId': _string(request['providerId']),
+        'providerName': providerName,
         'categoryTitle': categoryTitle,
       },
     );
