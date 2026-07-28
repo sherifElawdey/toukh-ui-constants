@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../orders/toukh_firestore_timestamps.dart';
 import 'toukh_fcm_data_keys.dart';
 import 'toukh_notification.dart';
 
@@ -95,12 +96,7 @@ abstract final class ToukhNotificationMapper {
     return {};
   }
 
-  static DateTime? _date(dynamic v) {
-    if (v == null) return null;
-    if (v is DateTime) return v;
-    // Firestore Timestamp handled at app boundary via .toDate() before calling
-    return null;
-  }
+  static DateTime? _date(dynamic v) => ToukhFirestoreTimestamps.toDateTime(v);
 
   static String? _string(dynamic v) {
     if (v is String && v.trim().isNotEmpty) return v.trim();

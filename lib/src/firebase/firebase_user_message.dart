@@ -39,8 +39,8 @@ const _englishDefaults = <String, String>{
       'Service is unavailable right now.',
   FirebaseErrorKeys.actionNotAllowed:
       "This action isn't allowed right now.",
-  FirebaseErrorKeys.authInvalidCredentials: 'Incorrect email or password.',
-  FirebaseErrorKeys.authEmailInUse: 'This email is already registered.',
+  FirebaseErrorKeys.authInvalidCredentials: 'Incorrect phone number or password.',
+  FirebaseErrorKeys.authEmailInUse: 'This phone number is already registered.',
   FirebaseErrorKeys.authTooManyRequests:
       'Too many attempts. Try again later.',
   FirebaseErrorKeys.authRequiresRecentLogin: 'Sign in again to continue.',
@@ -127,10 +127,12 @@ _ResolvedFirebaseMessage _authMessage(FirebaseAuthException e) {
     case 'invalid-credential':
     case 'user-not-found':
     case 'invalid-email':
+    case 'invalid-phone-number':
       return const _ResolvedFirebaseMessage(
         key: FirebaseErrorKeys.authInvalidCredentials,
       );
     case 'email-already-in-use':
+    case 'account-exists-with-different-credential':
       return const _ResolvedFirebaseMessage(
         key: FirebaseErrorKeys.authEmailInUse,
       );

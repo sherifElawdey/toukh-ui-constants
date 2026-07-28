@@ -3,6 +3,7 @@ enum GlobalOrderStatus {
   pending,
   awaitingPharmacySelection,
   preparing,
+  searchingDriver,
   driverAssigned,
   partiallyPicked,
   pickedUp,
@@ -15,6 +16,7 @@ enum GlobalOrderStatus {
         GlobalOrderStatus.awaitingPharmacySelection =>
           'awaiting_pharmacy_selection',
         GlobalOrderStatus.preparing => 'preparing',
+        GlobalOrderStatus.searchingDriver => 'searching_driver',
         GlobalOrderStatus.driverAssigned => 'driver_assigned',
         GlobalOrderStatus.partiallyPicked => 'partially_picked',
         GlobalOrderStatus.pickedUp => 'picked_up',
@@ -32,6 +34,8 @@ enum GlobalOrderStatus {
         return GlobalOrderStatus.awaitingPharmacySelection;
       case 'preparing':
         return GlobalOrderStatus.preparing;
+      case 'searching_driver':
+        return GlobalOrderStatus.searchingDriver;
       case 'driver_assigned':
       case 'courier_assigned':
         return GlobalOrderStatus.driverAssigned;

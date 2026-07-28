@@ -33,13 +33,26 @@ class FinishedOrder extends Equatable {
     );
   }
 
-  Map<String, dynamic> toMap() => {
-        'masterOrderId': masterOrderId,
-        'order': order.toMap(),
-        'terminalStatus': terminalStatus.wireValue,
-        if (finishedAt != null) 'finishedAt': finishedAt!.toIso8601String(),
-        'providerIds': order.providerIds,
-      };
+  Map<String, dynamic> toMap() {
+    final driverIds = <String>{};
+    final assignmentId = order.driverAssignment?.driverId.trim();
+    if (assignmentId != null && assignmentId.isNotEmpty) {
+      driverIds.add(assignmentId);
+    }
+    for (final slice in order.providerSlices.values) {
+      final id = slice.driverId?.trim();
+      if (id != null && id.isNotEmpty) driverIds.add(id);
+    }
+    return {
+      'masterOrderId': masterOrderId,
+      'order': order.toMap(),
+      'terminalStatus': terminalStatus.wireValue,
+      if (finishedAt != null)
+        'finishedAt': ToukhFirestoreTimestamps.fieldFromDateTime(finishedAt),
+      'providerIds': order.providerIds,
+      'driverIds': driverIds.toList(),
+    };
+  }
 
   @override
   List<Object?> get props =>

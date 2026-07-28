@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../orders/toukh_firestore_timestamps.dart';
 import 'location.dart';
 import 'order_item_model.dart';
 import 'order_status.dart';
@@ -171,15 +172,15 @@ class OrderModel extends Equatable {
       if (cancelReason != null && cancelReason!.isNotEmpty)
         'cancelReason': cancelReason,
       if (cancelledAt != null)
-        'cancelledAt': cancelledAt!.toUtc().toIso8601String(),
+        'cancelledAt': ToukhFirestoreTimestamps.fieldFromDateTime(cancelledAt),
       if (createdAt != null)
-        'createdAt': createdAt!.toUtc().toIso8601String(),
+        'createdAt': ToukhFirestoreTimestamps.fieldFromDateTime(createdAt),
       if (acceptedAt != null)
-        'acceptedAt': acceptedAt!.toUtc().toIso8601String(),
+        'acceptedAt': ToukhFirestoreTimestamps.fieldFromDateTime(acceptedAt),
       if (pickedUpAt != null)
-        'pickedUpAt': pickedUpAt!.toUtc().toIso8601String(),
+        'pickedUpAt': ToukhFirestoreTimestamps.fieldFromDateTime(pickedUpAt),
       if (deliveredAt != null)
-        'deliveredAt': deliveredAt!.toUtc().toIso8601String(),
+        'deliveredAt': ToukhFirestoreTimestamps.fieldFromDateTime(deliveredAt),
       'items': items.map((e) => e.toMap()).toList(growable: false),
     };
   }
@@ -224,18 +225,9 @@ class OrderModel extends Equatable {
     return null;
   }
 
-  /// Lenient datetime parser. Accepts [DateTime] (returned as-is), ISO 8601
-  /// strings, and millisecond epoch ints. Apps using cloud_firestore should
-  /// convert `Timestamp` to `DateTime` in their data layer before calling
-  /// [fromMap].
-  static DateTime? _date(dynamic value) {
-    if (value is DateTime) return value;
-    if (value is String) return DateTime.tryParse(value);
-    if (value is int) {
-      return DateTime.fromMillisecondsSinceEpoch(value, isUtc: true).toLocal();
-    }
-    return null;
-  }
+  /// Lenient datetime parser for Firestore and legacy wire formats.
+  static DateTime? _date(dynamic value) =>
+      ToukhFirestoreTimestamps.toDateTime(value);
 
   static Location _location(dynamic value) {
     if (value is Map) {

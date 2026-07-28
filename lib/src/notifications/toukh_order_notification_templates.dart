@@ -39,7 +39,7 @@ abstract final class ToukhOrderNotificationTemplates {
     String? customerPhotoUrl,
   }) {
     final customerName =
-        _string(order['customerName']) ?? _string(order['clientName']) ?? 'Customer';
+        _string(order['customerName']) ?? _string(order['clientName']) ?? 'عميل';
     final totals = _orderTotalsAndItems(order);
     final itemsBlock = _formatOrderLinesBlock(
       orderPrice: totals.orderPrice,
@@ -51,7 +51,7 @@ abstract final class ToukhOrderNotificationTemplates {
     final imageUrl = _string(order['customerPhotoUrl']) ?? customerPhotoUrl;
 
     return ToukhNotificationTemplate(
-      title: 'New order · $customerName',
+      title: 'طلب جديد · $customerName',
       description: itemsBlock,
       imageUrl: imageUrl,
       type: ToukhOrderNotificationTypes.orderPlaced,
@@ -92,9 +92,9 @@ abstract final class ToukhOrderNotificationTemplates {
     );
 
     return ToukhNotificationTemplate(
-      title: 'Order placed',
+      title: 'تم تقديم الطلب',
       description: _formatDescriptionWithHeadline(
-        'Your order was sent to the store.',
+        'تم إرسال طلبك إلى المتجر.',
         itemsBlock,
       ),
       imageUrl: providerImageUrl,
@@ -194,53 +194,53 @@ abstract final class ToukhOrderNotificationTemplates {
 
   static const _statusCopy = {
     'accepted': _StatusCopy(
-      title: 'Order approved',
-      headline: 'The store accepted your order and is preparing it.',
+      title: 'تمت الموافقة على الطلب',
+      headline: 'قبل المتجر طلبك وجاري تجهيزه.',
       type: ToukhOrderNotificationTypes.orderAccepted,
     ),
     'preparing': _StatusCopy(
-      title: 'Order approved',
-      headline: 'The store accepted your order and is preparing it.',
+      title: 'تمت الموافقة على الطلب',
+      headline: 'قبل المتجر طلبك وجاري تجهيزه.',
       type: ToukhOrderNotificationTypes.orderAccepted,
     ),
     'cancelled': _StatusCopy(
-      title: 'Order cancelled',
-      headline: 'The store could not fulfill your order.',
+      title: 'تم إلغاء الطلب',
+      headline: 'لم يتمكن المتجر من تنفيذ طلبك.',
       type: ToukhOrderNotificationTypes.orderCancelled,
     ),
     'courier_requested': _StatusCopy(
-      title: 'Delivery requested',
-      headline: 'The store is arranging a courier for your order.',
+      title: 'تم طلب التوصيل',
+      headline: 'المتجر يرتب مندوب توصيل لطلبك.',
       type: ToukhOrderNotificationTypes.courierRequested,
     ),
     'courier_assigned': _StatusCopy(
-      title: 'Courier assigned',
-      headline: 'A courier is on the way to pick up your order.',
+      title: 'تم تعيين مندوب توصيل',
+      headline: 'مندوب التوصيل في الطريق لاستلام طلبك.',
       type: ToukhOrderNotificationTypes.courierAssigned,
     ),
     'ready_for_pickup': _StatusCopy(
-      title: 'Ready for pickup',
-      headline: 'Your order is ready and waiting for the courier.',
+      title: 'جاهز للاستلام',
+      headline: 'طلبك جاهز وبانتظار مندوب التوصيل.',
       type: ToukhOrderNotificationTypes.readyForPickup,
     ),
     'out_for_delivery': _StatusCopy(
-      title: 'On the way',
-      headline: 'Your order is out for delivery.',
+      title: 'في الطريق',
+      headline: 'طلبك في الطريق إليك.',
       type: ToukhOrderNotificationTypes.outForDelivery,
     ),
     'picked_up': _StatusCopy(
-      title: 'Order picked up',
-      headline: 'Your order was picked up and is heading your way.',
+      title: 'تم استلام الطلب',
+      headline: 'تم استلام طلبك وهو في الطريق إليك.',
       type: ToukhOrderNotificationTypes.pickupCompleted,
     ),
     'delivered': _StatusCopy(
-      title: 'Delivered',
-      headline: 'Your order has been delivered. Enjoy!',
+      title: 'تم التوصيل',
+      headline: 'تم توصيل طلبك. بالهنا والشفا!',
       type: ToukhOrderNotificationTypes.delivered,
     ),
     'completed': _StatusCopy(
-      title: 'Delivered',
-      headline: 'Your order has been completed.',
+      title: 'تم التوصيل',
+      headline: 'تم إكمال طلبك.',
       type: ToukhOrderNotificationTypes.delivered,
     ),
   };
@@ -268,7 +268,7 @@ abstract final class ToukhOrderNotificationTemplates {
     final name = _string(item['title']) ??
         _string(item['name']) ??
         _string(item['itemName']) ??
-        'Item';
+        'منتج';
     final quantity = (_toInt(item['quantity']) ?? 1).clamp(1, 999999);
     final unitPrice = _toNumber(item['unitPrice']);
     final lineTotal = _toNumber(item['lineTotalEgp']) != 0
@@ -294,19 +294,19 @@ abstract final class ToukhOrderNotificationTemplates {
   }) {
     final lines = mappedItems.map((i) {
       final qty = i['quantity'] as int? ?? 1;
-      final name = i['name'] as String? ?? 'Item';
+      final name = i['name'] as String? ?? 'منتج';
       final lineTotal = (i['lineTotalEgp'] as num?)?.toDouble() ?? 0;
-      return '$qty× $name — ${lineTotal.round()} EGP';
+      return '$qty× $name — ${lineTotal.round()} جنيه';
     }).toList();
 
     final shown = lines.take(_maxBodyLines).toList();
     if (lines.length > _maxBodyLines) {
-      shown.add('+${lines.length - _maxBodyLines} more');
+      shown.add('+${lines.length - _maxBodyLines} أخرى');
     }
     if (deliveryPrice > 0) {
-      shown.add('Delivery: ${deliveryPrice.round()} EGP');
+      shown.add('التوصيل: ${deliveryPrice.round()} جنيه');
     }
-    shown.add('Total: ${totalEgp.round()} EGP');
+    shown.add('الإجمالي: ${totalEgp.round()} جنيه');
     return shown.join('\n');
   }
 

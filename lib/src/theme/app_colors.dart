@@ -19,9 +19,11 @@ abstract final class AppColors {
 
   static const Color bottomNavPill = appColor;
 
-  static Color get borderSubtle => appColor.withValues(alpha: 0.35);
+  /// Hairline glass borders: barely-there, semi-transparent.
+  static Color get borderSubtle => appColor.withValues(alpha: 0.14);
 
-  static const Color borderStrong = Color(0xFFE0E0E0);
+  /// Semi-transparent neutral hairline (was opaque grey).
+  static const Color borderStrong = Color(0x2E9E9E9E);
 
   static const Color borderFocus = appColor;
 

@@ -1,4 +1,5 @@
 import '../models/location.dart';
+import '../settings/order_acceptance_sla.dart';
 import 'fulfillment_mode.dart';
 import 'master_order.dart';
 import 'provider_order_slice.dart';
@@ -43,14 +44,15 @@ extension MasterOrderProviderX on MasterOrder {
 }
 
 extension ProviderOrderSliceActionsX on ProviderOrderSlice {
+  /// Courier marketplace request — only before an assignment exists.
+  /// Hidden once [courier_requested] so providers cannot spam re-request.
   bool get canRequestDelivery =>
       fulfillmentMode != FulfillmentMode.pickup &&
       !isAggregated &&
       !isStoreDelivery &&
       !hasAssignedDriver &&
       (statusWire == ProviderOrderStatusWire.accepted ||
-          statusWire == ProviderOrderStatusWire.preparing ||
-          statusWire == ProviderOrderStatusWire.courierRequested);
+          statusWire == ProviderOrderStatusWire.preparing);
 
   bool get canMarkReadyForPickup =>
       !isStoreDelivery &&
@@ -81,7 +83,32 @@ Duration providerIncomingOrderElapsedSince(DateTime? placedAt) {
   return diff.isNegative ? Duration.zero : diff;
 }
 
-IncomingOrderUrgency providerIncomingOrderUrgencyFromElapsed(Duration elapsed) {
+IncomingOrderUrgency acceptanceUrgencyFromElapsed(
+  Duration elapsed, {
+  required int slaMinutes,
+}) {
+  if (elapsed > Duration(minutes: slaMinutes)) {
+    return IncomingOrderUrgency.critical;
+  }
+  final warningAt = acceptanceWarningMinutes(slaMinutes);
+  if (elapsed >= Duration(minutes: warningAt)) {
+    return IncomingOrderUrgency.warning;
+  }
+  return IncomingOrderUrgency.normal;
+}
+
+IncomingOrderUrgency providerIncomingOrderUrgencyFromElapsed(
+  Duration elapsed, {
+  OrderAcceptanceSla? sla,
+  String? serviceTypeKey,
+}) {
+  if (sla != null) {
+    final key = serviceTypeKey ?? OrderAcceptanceSlaKeys.defaultKey;
+    return acceptanceUrgencyFromElapsed(
+      elapsed,
+      slaMinutes: sla.minutesFor(key),
+    );
+  }
   if (elapsed > const Duration(minutes: 5)) {
     return IncomingOrderUrgency.critical;
   }
@@ -92,8 +119,10 @@ IncomingOrderUrgency providerIncomingOrderUrgencyFromElapsed(Duration elapsed) {
 }
 
 IncomingOrderUrgency providerIncomingOrderUrgencyForSlice(
-  ProviderOrderSlice? slice,
-) {
+  ProviderOrderSlice? slice, {
+  OrderAcceptanceSla? sla,
+  String? serviceTypeKey,
+}) {
   if (slice == null || !slice.isIncoming) {
     return IncomingOrderUrgency.normal;
   }
@@ -101,11 +130,21 @@ IncomingOrderUrgency providerIncomingOrderUrgencyForSlice(
   if (placed == null) return IncomingOrderUrgency.normal;
   return providerIncomingOrderUrgencyFromElapsed(
     providerIncomingOrderElapsedSince(placed),
+    sla: sla,
+    serviceTypeKey: serviceTypeKey,
   );
 }
 
-bool providerSliceIsOverdueIncoming(ProviderOrderSlice slice) {
-  return providerIncomingOrderUrgencyForSlice(slice) ==
+bool providerSliceIsOverdueIncoming(
+  ProviderOrderSlice slice, {
+  OrderAcceptanceSla? sla,
+  String? serviceTypeKey,
+}) {
+  return providerIncomingOrderUrgencyForSlice(
+        slice,
+        sla: sla,
+        serviceTypeKey: serviceTypeKey,
+      ) ==
       IncomingOrderUrgency.critical;
 }
 
@@ -228,14 +267,24 @@ abstract final class ProviderMasterOrderTabFilters {
     List<ProviderMasterOrderRow> rows,
     ProviderOrdersSort sort, {
     ProviderOrdersTab? tab,
+    OrderAcceptanceSla? sla,
+    String? serviceTypeKey,
   }) {
     final copy = List<ProviderMasterOrderRow>.from(rows);
     final epoch = DateTime.fromMillisecondsSinceEpoch(0);
 
     if (tab == ProviderOrdersTab.incoming) {
       copy.sort((a, b) {
-        final aOver = providerSliceIsOverdueIncoming(a.slice);
-        final bOver = providerSliceIsOverdueIncoming(b.slice);
+        final aOver = providerSliceIsOverdueIncoming(
+          a.slice,
+          sla: sla,
+          serviceTypeKey: serviceTypeKey,
+        );
+        final bOver = providerSliceIsOverdueIncoming(
+          b.slice,
+          sla: sla,
+          serviceTypeKey: serviceTypeKey,
+        );
         if (aOver != bOver) return aOver ? -1 : 1;
         final at = a.slice.createdAt ?? epoch;
         final bt = b.slice.createdAt ?? epoch;

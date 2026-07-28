@@ -55,6 +55,12 @@ flutter run \
   --dart-define=TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxx
 ```
 
-When all three are non-empty, consumer/provider/delivery apps register `TwilioVerifyOtpRepository`; otherwise they fall back to an in-memory stub. Configure your Verify Service for **WhatsApp** (bring your own sender) and enable **Egypt (+20)** geo permissions. `TwilioVerifyClient` sends with `channel=whatsapp` and SMS fallback via `ChannelConfiguration`; if that is rejected, it retries SMS only.
+When credentials are present (local `twilio_local_secrets.dart` or dart-define overrides), apps register `TwilioVerifyOtpRepository`. **There is no OTP stub mode** — missing credentials fail with a configuration error. Configure your Verify Service for **WhatsApp** (bring your own sender) and enable **Egypt (+20)** geo permissions. `TwilioVerifyClient` sends with `channel=whatsapp` and SMS fallback via `ChannelConfiguration`; if that is rejected, it retries SMS only.
+
+Per-app setup: [`toukh/docs/twilio-otp-setup.md`](../../toukh/docs/twilio-otp-setup.md).
+
+```bash
+cd toukh && dart run tool/test_twilio_otp.dart --to=+2010XXXXXXXX
+```
 
 **Security note:** calling Verify from the mobile app is convenient but credentials can be extracted from the app binary. For production hardening, prefer a backend or Cloud Function that holds the Auth Token.

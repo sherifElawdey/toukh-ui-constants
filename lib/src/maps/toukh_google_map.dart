@@ -4,8 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:toukh_ui/src/maps/toukh_map_debug.dart';
 import 'package:toukh_ui/src/maps/toukh_map_styles.dart';
+import 'package:toukh_ui/src/maps/toukh_maps_web_ready.dart';
 
 /// [GoogleMap] with Toukh light/dark JSON styling applied from [Theme].
+///
+/// On web, waits until `google.maps` exists (from `web/index.html`) before
+/// building the map, to avoid `Cannot read properties of undefined (reading
+/// 'maps')` when the script is missing or still loading.
 class ToukhGoogleMap extends StatefulWidget {
   const ToukhGoogleMap({
     super.key,
@@ -83,40 +88,39 @@ class ToukhGoogleMap extends StatefulWidget {
 }
 
 class _ToukhGoogleMapState extends State<ToukhGoogleMap> {
-  GoogleMapController? _controller;
-  Brightness? _lastBrightness;
+  Future<bool>? _webMapsReady;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _applyStyleIfNeeded();
-  }
-
-  void _applyStyleIfNeeded() {
-    final brightness = Theme.of(context).brightness;
-    if (_controller == null || _lastBrightness == brightness) return;
-    _lastBrightness = brightness;
-    final style = ToukhMapStyles.styleForBrightness(brightness);
-    _controller!.setMapStyle(style);
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      _webMapsReady = waitForGoogleMapsJs();
+    }
   }
 
   void _onMapCreated(GoogleMapController controller) {
-    _controller = controller;
-    _lastBrightness = null;
     if (widget.debugScreenName != null) {
       onToukhMapCreated(widget.debugScreenName!, controller);
     }
-    _applyStyleIfNeeded();
     widget.onMapCreated?.call(controller);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final style = ToukhMapStyles.styleForBrightness(
-      Theme.of(context).brightness,
-    );
+  Widget _buildMap(BuildContext context) {
+    // Apply style only via the widget `style:` param — avoid also calling
+    // setMapStyle on the controller (double-apply can race on iOS).
+    // Pass `--dart-define=TOUKH_MAPS_UNSTYLED=true` to disable style (tile auth QA).
+    final style = kToukhMapsUnstyledDebug
+        ? null
+        : ToukhMapStyles.styleForBrightness(
+            Theme.of(context).brightness,
+          );
 
     return GoogleMap(
+      key: ValueKey(
+        kToukhMapsUnstyledDebug
+            ? 'unstyled'
+            : Theme.of(context).brightness,
+      ),
       initialCameraPosition: widget.initialCameraPosition,
       style: style,
       onMapCreated: _onMapCreated,
@@ -152,6 +156,42 @@ class _ToukhGoogleMapState extends State<ToukhGoogleMap> {
       onCameraIdle: widget.onCameraIdle,
       onTap: widget.onTap,
       onLongPress: widget.onLongPress,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kIsWeb) {
+      return _buildMap(context);
+    }
+
+    return FutureBuilder<bool>(
+      future: _webMapsReady,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const ColoredBox(
+            color: Color(0xFFE8EEF5),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.data != true) {
+          return const ColoredBox(
+            color: Color(0xFFE8EEF5),
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Google Maps JS not loaded — hard-refresh the browser '
+                  '(Cmd+Shift+R) or check web/index.html for the maps/api/js '
+                  'script. Hot restart does not reload index.html.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildMap(context);
+      },
     );
   }
 }

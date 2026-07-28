@@ -19,6 +19,9 @@ abstract final class ToukhHomeServiceNotificationTemplates {
   static String customerOnMyWayNotificationId(String requestId) =>
       'home_service_on_my_way_$requestId';
 
+  static String providerAcceptedNotificationId(String requestId) =>
+      'home_service_accepted_$requestId';
+
   static String homeServiceRequestsCollection() => _kCollection;
 
   static ToukhNotificationTemplate buildProviderNewRequestTemplate({
@@ -28,8 +31,8 @@ abstract final class ToukhHomeServiceNotificationTemplates {
     String? customerPhotoUrl,
   }) {
     final customerName =
-        _string(request['customerName']) ?? _string(request['userName']) ?? 'Customer';
-    final categoryTitle = _string(request['categoryTitle']) ?? 'Home service';
+        _string(request['customerName']) ?? _string(request['userName']) ?? 'عميل';
+    final categoryTitle = _string(request['categoryTitle']) ?? 'خدمة منزلية';
     final note = _string(request['note']);
     final description = _formatDescription(categoryTitle: categoryTitle, note: note);
     final imageUrl = _string(request['customerPhotoUrl']) ?? customerPhotoUrl;
@@ -37,7 +40,7 @@ abstract final class ToukhHomeServiceNotificationTemplates {
     final status = _string(request['status']) ?? 'pending';
 
     return ToukhNotificationTemplate(
-      title: 'New request · $customerName',
+      title: 'طلب جديد · $customerName',
       description: description,
       imageUrl: imageUrl,
       type: ToukhHomeServiceNotificationTypes.homeServiceRequestPlaced,
@@ -85,21 +88,21 @@ abstract final class ToukhHomeServiceNotificationTemplates {
     required String requestId,
     String? providerImageUrl,
   }) {
-    final providerName = _string(request['providerName']) ?? 'Provider';
+    final providerName = _string(request['providerName']) ?? 'مقدم الخدمة';
     final quotedPrice = _toDouble(request['quotedPriceEgp']);
-    final categoryTitle = _string(request['categoryTitle']) ?? 'Home service';
+    final categoryTitle = _string(request['categoryTitle']) ?? 'خدمة منزلية';
 
     final lines = <String>[categoryTitle];
     if (quotedPrice != null) {
-      lines.add('Price: ${quotedPrice.round()} EGP');
+      lines.add('السعر: ${quotedPrice.round()} جنيه');
     }
     final scheduledRaw = request['scheduledAt'];
     if (scheduledRaw is DateTime) {
-      lines.add('Visit: ${scheduledRaw.toLocal()}');
+      lines.add('الزيارة: ${scheduledRaw.toLocal()}');
     }
 
     return ToukhNotificationTemplate(
-      title: 'Quote from $providerName',
+      title: 'عرض سعر من $providerName',
       description: lines.join('\n'),
       imageUrl: providerImageUrl ?? _string(request['providerImageUrl']),
       type: ToukhHomeServiceNotificationTypes.homeServiceQuoteReceived,
@@ -115,22 +118,59 @@ abstract final class ToukhHomeServiceNotificationTemplates {
     );
   }
 
+  /// Immediate FCM/inbox alert when the customer accepts a quote.
+  ///
+  /// Includes [visitDate] so the provider app can schedule a local reminder.
+  static ToukhNotificationTemplate buildProviderAcceptedTemplate({
+    required Map<String, dynamic> request,
+    required String requestId,
+  }) {
+    final customerName =
+        _string(request['customerName']) ?? _string(request['userName']) ?? 'عميل';
+    final categoryTitle = _string(request['categoryTitle']) ?? 'خدمة منزلية';
+    final visitDate = _visitDate(request);
+
+    return ToukhNotificationTemplate(
+      title: 'تم قبول العرض · $customerName',
+      description: visitDate != null
+          ? '$categoryTitle · زيارة ${visitDate.toLocal()}'
+          : 'تم قبول $categoryTitle',
+      imageUrl: _string(request['customerPhotoUrl']),
+      type: ToukhHomeServiceNotificationTypes.homeServiceRequestAccepted,
+      category: ToukhNotificationCategory.homeService,
+      rootRoute: ToukhNotificationRoutes.providerHomeServiceRequestDetail(requestId),
+      orderId: requestId,
+      payload: {
+        'requestId': requestId,
+        'orderId': requestId,
+        'providerId': _string(request['providerId']),
+        'userId': _string(request['userId']),
+        'customerName': customerName,
+        'categoryTitle': categoryTitle,
+        'status': 'accepted',
+        if (visitDate != null) 'visitDate': visitDate.toUtc().toIso8601String(),
+        if (visitDate != null)
+          'scheduledAt': visitDate.toUtc().toIso8601String(),
+      },
+    );
+  }
+
   static ToukhNotificationTemplate buildCustomerOnMyWayTemplate({
     required Map<String, dynamic> request,
     required String requestId,
     String? providerImageUrl,
   }) {
-    final providerName = _string(request['providerName']) ?? 'Provider';
-    final categoryTitle = _string(request['categoryTitle']) ?? 'Home service';
+    final providerName = _string(request['providerName']) ?? 'مقدم الخدمة';
+    final categoryTitle = _string(request['categoryTitle']) ?? 'خدمة منزلية';
 
-    final lines = <String>[categoryTitle, '$providerName is on the way'];
+    final lines = <String>[categoryTitle, '$providerName في الطريق'];
     final scheduledRaw = request['scheduledAt'];
     if (scheduledRaw is DateTime) {
-      lines.add('Visit: ${scheduledRaw.toLocal()}');
+      lines.add('الزيارة: ${scheduledRaw.toLocal()}');
     }
 
     return ToukhNotificationTemplate(
-      title: '$providerName is on the way',
+      title: '$providerName في الطريق',
       description: lines.join('\n'),
       imageUrl: providerImageUrl ?? _string(request['providerImageUrl']),
       type: ToukhHomeServiceNotificationTypes.homeServiceProviderEnRoute,
@@ -166,6 +206,15 @@ abstract final class ToukhHomeServiceNotificationTemplates {
     if (v is num) return v.toDouble();
     if (v is String && v.trim().isNotEmpty) {
       return double.tryParse(v.trim());
+    }
+    return null;
+  }
+
+  static DateTime? _visitDate(Map<String, dynamic> request) {
+    final scheduled = request['scheduledAt'] ?? request['visitDate'];
+    if (scheduled is DateTime) return scheduled.toUtc();
+    if (scheduled is String && scheduled.trim().isNotEmpty) {
+      return DateTime.tryParse(scheduled.trim())?.toUtc();
     }
     return null;
   }

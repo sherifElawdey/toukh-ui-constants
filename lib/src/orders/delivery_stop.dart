@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../models/location.dart';
 import 'provider_sub_state.dart';
+import 'toukh_firestore_timestamps.dart';
 
 class DeliveryStop extends Equatable {
   const DeliveryStop({
@@ -47,7 +48,8 @@ class DeliveryStop extends Equatable {
         'state': state.wireValue,
         'sequence': sequence,
         if (pickupVerifiedAt != null)
-          'pickupVerifiedAt': pickupVerifiedAt!.toIso8601String(),
+          'pickupVerifiedAt':
+              ToukhFirestoreTimestamps.fieldFromDateTime(pickupVerifiedAt),
       };
 
   factory DeliveryStop.fromMap(Map<String, dynamic> map) {
@@ -59,16 +61,12 @@ class DeliveryStop extends Equatable {
       ),
       providerName: map['providerName'] as String?,
       state: ProviderSubState.fromWire(map['state'] as String?),
-      sequence: map['sequence'] as int? ?? 0,
+      sequence: (map['sequence'] as num?)?.toInt() ?? 0,
       pickupVerifiedAt: _parseDate(map['pickupVerifiedAt']),
     );
   }
 
-  static DateTime? _parseDate(dynamic v) {
-    if (v == null) return null;
-    if (v is DateTime) return v;
-    return DateTime.tryParse(v.toString());
-  }
+  static DateTime? _parseDate(dynamic v) => ToukhFirestoreTimestamps.toDateTime(v);
 
   @override
   List<Object?> get props =>

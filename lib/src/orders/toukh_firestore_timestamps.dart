@@ -13,6 +13,20 @@ abstract final class ToukhFirestoreTimestamps {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
+  /// Firestore write value for a client-known instant.
+  static Timestamp fromDateTime(DateTime date) =>
+      Timestamp.fromDate(date.toUtc());
+
+  /// Optional field for toMap / patch builders.
+  static Object? fieldFromDateTime(DateTime? date) =>
+      date == null ? null : fromDateTime(date);
+
+  /// Normalizes any legacy read shape back to a Firestore [Timestamp].
+  static Timestamp? toTimestamp(dynamic value) {
+    final dt = toDateTime(value);
+    return dt == null ? null : fromDateTime(dt);
+  }
+
   /// Parse values stored in Firestore into local [DateTime].
   static DateTime? toDateTime(dynamic value) {
     if (value == null) return null;

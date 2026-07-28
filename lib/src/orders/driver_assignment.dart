@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'toukh_firestore_timestamps.dart';
+
 class DriverAssignment extends Equatable {
   const DriverAssignment({
     required this.driverId,
@@ -22,7 +24,8 @@ class DriverAssignment extends Equatable {
         if (driverName != null) 'driverName': driverName,
         if (driverPhotoUrl != null) 'driverPhotoUrl': driverPhotoUrl,
         if (deliveryRequestId != null) 'deliveryRequestId': deliveryRequestId,
-        if (assignedAt != null) 'assignedAt': assignedAt!.toIso8601String(),
+        if (assignedAt != null)
+          'assignedAt': ToukhFirestoreTimestamps.fieldFromDateTime(assignedAt),
         'status': status,
       };
 
@@ -37,11 +40,7 @@ class DriverAssignment extends Equatable {
     );
   }
 
-  static DateTime? _parseDate(dynamic v) {
-    if (v == null) return null;
-    if (v is DateTime) return v;
-    return DateTime.tryParse(v.toString());
-  }
+  static DateTime? _parseDate(dynamic v) => ToukhFirestoreTimestamps.toDateTime(v);
 
   @override
   List<Object?> get props =>

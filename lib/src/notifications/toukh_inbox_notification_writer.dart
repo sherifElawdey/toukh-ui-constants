@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 
+import '../orders/toukh_firestore_timestamps.dart';
 import '../orders/toukh_order_paths.dart';
 import 'toukh_notification.dart';
 import 'toukh_notification_mapper.dart';
@@ -317,10 +318,11 @@ class ToukhInboxNotificationWriter {
         final userId = requestData['userId']?.toString();
         if (userId == null || userId.isEmpty) return null;
 
-        final scheduledTs = requestData['scheduledAt'];
         final merged = Map<String, dynamic>.from(requestData);
-        if (scheduledTs is Timestamp) {
-          merged['scheduledAt'] = scheduledTs.toDate();
+        final scheduledAt =
+            ToukhFirestoreTimestamps.toDateTime(requestData['scheduledAt']);
+        if (scheduledAt != null) {
+          merged['scheduledAt'] = scheduledAt;
         }
 
         final template =
@@ -384,10 +386,11 @@ class ToukhInboxNotificationWriter {
         final userId = requestData['userId']?.toString();
         if (userId == null || userId.isEmpty) return null;
 
-        final scheduledTs = requestData['scheduledAt'];
         final merged = Map<String, dynamic>.from(requestData);
-        if (scheduledTs is Timestamp) {
-          merged['scheduledAt'] = scheduledTs.toDate();
+        final scheduledAt =
+            ToukhFirestoreTimestamps.toDateTime(requestData['scheduledAt']);
+        if (scheduledAt != null) {
+          merged['scheduledAt'] = scheduledAt;
         }
 
         final template =
@@ -426,6 +429,75 @@ class ToukhInboxNotificationWriter {
     } catch (e, st) {
       debugPrint(
         'ToukhInboxNotificationWriter.deliverCustomerHomeServiceOnMyWayIfNeeded failed: $e\n$st',
+      );
+      return null;
+    }
+  }
+
+  /// Idempotent provider home-service accepted inbox row
+  /// (sets [providerAcceptedNotifiedAt]). Spark fallback when CF is unavailable.
+  Future<String?> deliverProviderHomeServiceAcceptedIfNeeded({
+    required String requestId,
+  }) async {
+    try {
+      return await _firestore.runTransaction((tx) async {
+        final requestRef = _homeServiceRequestRef(requestId);
+        final requestSnap = await tx.get(requestRef);
+        if (!requestSnap.exists) return null;
+
+        final requestData = Map<String, dynamic>.from(requestSnap.data() ?? {});
+        if (requestData['providerAcceptedNotifiedAt'] != null) return null;
+
+        final status =
+            (requestData['status'] as String? ?? '').trim().toLowerCase();
+        if (status != 'accepted') return null;
+
+        final providerId = requestData['providerId']?.toString();
+        if (providerId == null || providerId.isEmpty) return null;
+
+        final merged = Map<String, dynamic>.from(requestData);
+        final scheduledAt =
+            ToukhFirestoreTimestamps.toDateTime(requestData['scheduledAt']);
+        if (scheduledAt != null) {
+          merged['scheduledAt'] = scheduledAt;
+        }
+
+        final template =
+            ToukhHomeServiceNotificationTemplates.buildProviderAcceptedTemplate(
+          request: merged,
+          requestId: requestId,
+        );
+
+        final notificationId =
+            ToukhHomeServiceNotificationTemplates.providerAcceptedNotificationId(
+          requestId,
+        );
+        final inboxRef = _inboxRef(
+          ToukhNotificationRecipient.provider,
+          providerId,
+        ).doc(notificationId);
+
+        final existingInbox = await tx.get(inboxRef);
+        if (existingInbox.exists) {
+          tx.update(requestRef, {
+            'providerAcceptedNotifiedAt': FieldValue.serverTimestamp(),
+          });
+          return null;
+        }
+
+        final doc = ToukhNotificationMapper.toFirestore(template);
+        doc['createdAt'] = FieldValue.serverTimestamp();
+        tx.set(inboxRef, doc);
+        tx.update(requestRef, {
+          'providerAcceptedNotifiedAt': FieldValue.serverTimestamp(),
+        });
+
+        return inboxRef.id;
+      });
+    } catch (e, st) {
+      debugPrint(
+        'ToukhInboxNotificationWriter.deliverProviderHomeServiceAcceptedIfNeeded '
+        'failed: $e\n$st',
       );
       return null;
     }

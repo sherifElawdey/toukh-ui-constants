@@ -6,7 +6,7 @@ abstract final class ToukhMapStyles {
 [
   {"featureType":"water","elementType":"geometry","stylers":[{"color":"#A7D8FF"}]},
   {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#F4F9FF"}]},
-  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#FFFFFF"},{"weight":1.8}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#FFFFFF"},{"weight":2}]},
   {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#D6EAFF"}]},
   {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#5BA8FF"}]},
   {"featureType":"road.highway","elementType":"labels.text.fill","stylers":[{"color":"#FFFFFF"}]},
@@ -25,7 +25,7 @@ abstract final class ToukhMapStyles {
 [
   {"featureType":"water","elementType":"geometry","stylers":[{"color":"#13293D"}]},
   {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#1A1D24"}]},
-  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#2B3440"},{"weight":1.6}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#2B3440"},{"weight":2}]},
   {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#344252"}]},
   {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#3B82F6"}]},
   {"featureType":"road.highway","elementType":"labels.text.fill","stylers":[{"color":"#FFFFFF"}]},

@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'toukh_firestore_timestamps.dart';
+
 class OrderTimelineEvent extends Equatable {
   const OrderTimelineEvent({
     required this.id,
@@ -22,7 +24,7 @@ class OrderTimelineEvent extends Equatable {
   Map<String, dynamic> toMap() => {
         'masterOrderId': masterOrderId,
         'type': type,
-        'at': at.toIso8601String(),
+        'at': ToukhFirestoreTimestamps.fromDateTime(at),
         if (actorRole != null) 'actorRole': actorRole,
         if (actorId != null) 'actorId': actorId,
         'payload': payload,
@@ -33,7 +35,7 @@ class OrderTimelineEvent extends Equatable {
       id: id,
       masterOrderId: map['masterOrderId'] as String? ?? '',
       type: map['type'] as String? ?? 'unknown',
-      at: DateTime.tryParse('${map['at']}') ?? DateTime.now(),
+      at: ToukhFirestoreTimestamps.toDateTime(map['at']) ?? DateTime.now(),
       actorRole: map['actorRole'] as String?,
       actorId: map['actorId'] as String?,
       payload: Map<String, dynamic>.from(map['payload'] as Map? ?? {}),

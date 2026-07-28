@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'fulfillment_mode.dart';
 import 'order_cancelled_by_role.dart';
 import 'provider_sub_state.dart';
+import 'toukh_firestore_timestamps.dart';
 
 class ProviderOrderRef extends Equatable {
   const ProviderOrderRef({
@@ -65,7 +66,8 @@ class ProviderOrderRef extends Equatable {
         'orderPriceEgp': orderPriceEgp,
         'deliveryFeeEgp': deliveryFeeEgp,
         'isAggregated': isAggregated,
-        if (cancelledAt != null) 'cancelledAt': cancelledAt!.toIso8601String(),
+        if (cancelledAt != null)
+          'cancelledAt': ToukhFirestoreTimestamps.fieldFromDateTime(cancelledAt),
         if (cancelReason != null) 'cancelReason': cancelReason,
         if (cancelledByRole != null)
           'cancelledByRole': cancelledByRole!.wireValue,
@@ -88,11 +90,7 @@ class ProviderOrderRef extends Equatable {
     );
   }
 
-  static DateTime? _parseDate(dynamic v) {
-    if (v == null) return null;
-    if (v is DateTime) return v;
-    return DateTime.tryParse(v.toString());
-  }
+  static DateTime? _parseDate(dynamic v) => ToukhFirestoreTimestamps.toDateTime(v);
 
   @override
   List<Object?> get props => [

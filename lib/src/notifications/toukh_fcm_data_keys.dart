@@ -9,5 +9,7 @@ abstract final class ToukhFcmDataKeys {
   static const link = 'link';
   static const type = 'type';
   static const orderId = 'orderId';
+  static const requestId = 'requestId';
+  static const visitDate = 'visitDate';
   static const category = 'category';
 }

@@ -199,19 +199,26 @@ class ProviderOrderSlice extends Equatable {
         if (driverName != null) 'driverName': driverName,
         if (driverPhotoUrl != null) 'driverPhotoUrl': driverPhotoUrl,
         if (deliveryRequestId != null) 'deliveryRequestId': deliveryRequestId,
-        if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
-        if (acceptedAt != null) 'acceptedAt': acceptedAt!.toIso8601String(),
+        if (createdAt != null)
+          'createdAt': ToukhFirestoreTimestamps.fieldFromDateTime(createdAt),
+        if (acceptedAt != null)
+          'acceptedAt': ToukhFirestoreTimestamps.fieldFromDateTime(acceptedAt),
         if (readyForPickupAt != null)
-          'readyForPickupAt': readyForPickupAt!.toIso8601String(),
-        if (dispatchedAt != null) 'dispatchedAt': dispatchedAt!.toIso8601String(),
-        if (deliveredAt != null) 'deliveredAt': deliveredAt!.toIso8601String(),
-        if (cancelledAt != null) 'cancelledAt': cancelledAt!.toIso8601String(),
+          'readyForPickupAt':
+              ToukhFirestoreTimestamps.fieldFromDateTime(readyForPickupAt),
+        if (dispatchedAt != null)
+          'dispatchedAt': ToukhFirestoreTimestamps.fieldFromDateTime(dispatchedAt),
+        if (deliveredAt != null)
+          'deliveredAt': ToukhFirestoreTimestamps.fieldFromDateTime(deliveredAt),
+        if (cancelledAt != null)
+          'cancelledAt': ToukhFirestoreTimestamps.fieldFromDateTime(cancelledAt),
         if (cancelReason != null) 'cancelReason': cancelReason,
         if (cancelledByRole != null)
           'cancelledByRole': cancelledByRole!.wireValue,
         'items': items.map((e) => e.toMap()).toList(),
         if (courierLateWarningAt != null)
-          'courierLateWarningAt': courierLateWarningAt!.toIso8601String(),
+          'courierLateWarningAt':
+              ToukhFirestoreTimestamps.fieldFromDateTime(courierLateWarningAt),
         'isAggregated': isAggregated,
         'masterProviderCount': masterProviderCount,
         if (pharmacyQuote != null) 'pharmacyQuote': pharmacyQuote!.toMap(),

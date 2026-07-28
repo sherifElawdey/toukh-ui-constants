@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 
 import '../models/location.dart';
 import 'toukh_firestore_timestamps.dart';
+import 'delivery_route_quote.dart';
 import 'driver_assignment.dart';
 import 'global_order_status.dart';
 import 'master_order_kind.dart';
@@ -40,6 +41,8 @@ class MasterOrder extends Equatable {
     this.customerName,
     this.customerPhone,
     this.customerPhotoUrl,
+    this.route,
+    this.completionCode,
     this.createdAt,
     this.updatedAt,
   });
@@ -70,6 +73,8 @@ class MasterOrder extends Equatable {
   final String? customerName;
   final String? customerPhone;
   final String? customerPhotoUrl;
+  final DeliveryRouteSnapshot? route;
+  final String? completionCode;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -103,6 +108,7 @@ class MasterOrder extends Equatable {
     String? customerName,
     String? customerPhone,
     String? customerPhotoUrl,
+    String? completionCode,
     DateTime? updatedAt,
   }) {
     return MasterOrder(
@@ -132,6 +138,8 @@ class MasterOrder extends Equatable {
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       customerPhotoUrl: customerPhotoUrl ?? this.customerPhotoUrl,
+      route: route,
+      completionCode: completionCode ?? this.completionCode,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -169,6 +177,8 @@ class MasterOrder extends Equatable {
         if (customerName != null) 'customerName': customerName,
         if (customerPhone != null) 'customerPhone': customerPhone,
         if (customerPhotoUrl != null) 'customerPhotoUrl': customerPhotoUrl,
+        if (route != null) 'route': route!.toMap(),
+        if (completionCode != null) 'completionCode': completionCode,
         if (createdAt != null)
           'createdAt': Timestamp.fromDate(createdAt!),
         if (updatedAt != null)
@@ -247,6 +257,12 @@ class MasterOrder extends Equatable {
       customerName: map['customerName'] as String?,
       customerPhone: map['customerPhone'] as String?,
       customerPhotoUrl: map['customerPhotoUrl'] as String?,
+      route: map['route'] is Map
+          ? DeliveryRouteSnapshot.fromMap(
+              Map<String, dynamic>.from(map['route'] as Map),
+            )
+          : null,
+      completionCode: map['completionCode'] as String?,
       createdAt: _parseDate(map['createdAt']),
       updatedAt: _parseDate(map['updatedAt']),
     );
@@ -282,6 +298,8 @@ class MasterOrder extends Equatable {
         customerName,
         customerPhone,
         customerPhotoUrl,
+        route,
+        completionCode,
         createdAt,
         updatedAt,
       ];

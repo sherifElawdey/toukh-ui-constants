@@ -26,7 +26,9 @@ class ProviderDeliveryConfig extends Equatable {
       deliveryFeeEgp: (cfg['deliveryFeeEgp'] as num?)?.toDouble() ??
           (cfg['fixedDeliveryFee'] as num?)?.toDouble() ??
           0,
-      freeDelivery: cfg['freeDelivery'] as bool? ?? false,
+      freeDelivery: cfg['freeDelivery'] as bool? ??
+          cfg['isFree'] as bool? ??
+          false,
     );
   }
 

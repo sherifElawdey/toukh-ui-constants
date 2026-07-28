@@ -18,6 +18,7 @@ import 'toukh_notification_mapper.dart';
 import 'toukh_notification_recipient.dart';
 import 'toukh_order_notification_types.dart';
 import 'toukh_push_config.dart';
+import 'toukh_visit_reminder_scheduler.dart';
 
 typedef FcmTokenPersister = Future<void> Function(String uid, String token);
 typedef NotificationTapHandler = Future<void> Function(ToukhNotification message);
@@ -41,12 +42,19 @@ class ToukhPushMessaging {
   bool _initialized = false;
 
   /// Shows a tray notification for background/data-only FCM (call after Firebase init).
+  ///
+  /// Also schedules a home-service visit reminder when the payload includes
+  /// [home_service_request_accepted] + visitDate (Android background/terminated).
   static Future<void> showBackgroundNotification(RemoteMessage message) async {
     if (kIsWeb) return;
 
+    await ToukhVisitReminderScheduler.tryScheduleFromFcmData(
+      Map<String, dynamic>.from(message.data),
+    );
+
     final n = message.notification;
     final title =
-        n?.title ?? message.data['title']?.toString().trim() ?? 'Toukh';
+        n?.title ?? message.data['title']?.toString().trim() ?? 'طوخ';
     final body = n?.body ??
         message.data['body']?.toString() ??
         message.data['description']?.toString() ??
@@ -273,9 +281,13 @@ class ToukhPushMessaging {
   }
 
   Future<void> _showForegroundNotification(RemoteMessage message) async {
+    await ToukhVisitReminderScheduler.tryScheduleFromFcmData(
+      Map<String, dynamic>.from(message.data),
+    );
+
     final n = message.notification;
     final data = message.data;
-    final title = n?.title ?? data['title'] ?? 'Toukh';
+    final title = n?.title ?? data['title'] ?? 'طوخ';
     final body = n?.body ?? data['body'] ?? data['description'] ?? '';
 
     final parsed = _notificationFromMessage(message);
@@ -309,19 +321,41 @@ class ToukhPushMessaging {
     if (notification != null) return notification;
 
     final orderId = data[ToukhFcmDataKeys.orderId]?.toString();
-    if (orderId == null || orderId.isEmpty) return null;
-    return ToukhNotification(
-      id: data[ToukhFcmDataKeys.notificationId]?.toString() ?? orderId,
-      title: data['title']?.toString() ?? 'Toukh',
-      description:
-          data['body']?.toString() ?? data['description']?.toString() ?? '',
-      imageUrl: data[ToukhFcmDataKeys.imageUrl]?.toString(),
-      rootRoute: data[ToukhFcmDataKeys.rootRoute]?.toString() ?? '',
-      payload: _decodePayloadJson(data[ToukhFcmDataKeys.payloadJson]),
-      type: data[ToukhFcmDataKeys.type]?.toString(),
-      orderId: orderId,
-      category: data[ToukhFcmDataKeys.category]?.toString() ?? 'order',
-    );
+    if (orderId != null && orderId.isNotEmpty) {
+      return ToukhNotification(
+        id: data[ToukhFcmDataKeys.notificationId]?.toString() ?? orderId,
+        title: data['title']?.toString() ?? 'طوخ',
+        description:
+            data['body']?.toString() ?? data['description']?.toString() ?? '',
+        imageUrl: data[ToukhFcmDataKeys.imageUrl]?.toString(),
+        rootRoute: data[ToukhFcmDataKeys.rootRoute]?.toString() ?? '',
+        payload: _decodePayloadJson(data[ToukhFcmDataKeys.payloadJson]),
+        type: data[ToukhFcmDataKeys.type]?.toString(),
+        orderId: orderId,
+        category: data[ToukhFcmDataKeys.category]?.toString() ?? 'order',
+      );
+    }
+
+    final rideId = data['rideId']?.toString() ??
+        _decodePayloadJson(data[ToukhFcmDataKeys.payloadJson])['rideId']
+            ?.toString();
+    if (rideId != null && rideId.isNotEmpty) {
+      final payload = _decodePayloadJson(data[ToukhFcmDataKeys.payloadJson]);
+      payload.putIfAbsent('rideId', () => rideId);
+      return ToukhNotification(
+        id: data[ToukhFcmDataKeys.notificationId]?.toString() ??
+            'ride_$rideId',
+        title: data['title']?.toString() ?? 'طوخ',
+        description:
+            data['body']?.toString() ?? data['description']?.toString() ?? '',
+        imageUrl: data[ToukhFcmDataKeys.imageUrl]?.toString(),
+        rootRoute: data[ToukhFcmDataKeys.rootRoute]?.toString() ?? '',
+        payload: payload,
+        type: data[ToukhFcmDataKeys.type]?.toString(),
+        category: data[ToukhFcmDataKeys.category]?.toString() ?? 'ride',
+      );
+    }
+    return null;
   }
 
   Map<String, dynamic> _decodePayloadJson(dynamic raw) {
