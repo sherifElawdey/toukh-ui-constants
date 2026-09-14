@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:maps_toolkit/maps_toolkit.dart' as mt;
+import 'package:toukh_ui/src/firestore/toukh_firestore_collections.dart';
 import 'package:toukh_ui/src/geofence/lat_lng_point.dart';
 import 'package:toukh_ui/src/geofence/service_area.dart';
 
@@ -13,7 +14,7 @@ class GeofenceService {
   GeofenceService({FirebaseFirestore? firestore})
       : _fs = firestore ?? FirebaseFirestore.instance;
 
-  static const String collectionName = 'service_areas';
+  static const String collectionName = ToukhFirestoreCollections.serviceAreas;
 
   final FirebaseFirestore _fs;
 

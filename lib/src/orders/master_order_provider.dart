@@ -1,6 +1,7 @@
 import '../models/location.dart';
 import '../settings/order_acceptance_sla.dart';
 import 'fulfillment_mode.dart';
+import 'global_order_status.dart';
 import 'master_order.dart';
 import 'provider_order_slice.dart';
 import 'provider_order_status_wire.dart';
@@ -12,6 +13,9 @@ enum IncomingOrderUrgency { normal, warning, critical }
 enum ProviderOrdersTab { incoming, inProgress, outgoing, delivered }
 
 enum ProviderOrdersSort { newest, oldest }
+
+/// How long a driver search stays active before re-request is allowed.
+const Duration kDriverSearchTimeout = Duration(minutes: 15);
 
 extension MasterOrderProviderX on MasterOrder {
   ProviderOrderSlice? sliceFor(String providerId) =>
@@ -41,25 +45,82 @@ extension MasterOrderProviderX on MasterOrder {
     if (slice == null) return false;
     return slice.isTerminal || globalStatus.isTerminal;
   }
+
+  bool get isGroupOrder =>
+      providerIds.length > 1 ||
+      providerSlices.values.any((s) => s.masterProviderCount > 1) ||
+      isAggregated;
+
+  /// True when no other provider has accepted/progressed yet (pre-approve check).
+  bool wouldBeFirstAccepter(String providerId) {
+    if (!isGroupOrder) return false;
+    for (final entry in providerSlices.entries) {
+      if (entry.key == providerId) continue;
+      final w = entry.value.statusWire;
+      if (ProviderOrderStatusWire.isIncoming(w)) continue;
+      if (w == ProviderOrderStatusWire.cancelled) continue;
+      return false;
+    }
+    return true;
+  }
+
+  DateTime? get effectiveDeliveryRequestedAt {
+    if (deliveryRequestedAt != null) return deliveryRequestedAt;
+    DateTime? earliest;
+    for (final s in providerSlices.values) {
+      final at = s.deliveryRequestedAt;
+      if (at == null) continue;
+      if (earliest == null || at.isBefore(earliest)) earliest = at;
+    }
+    return earliest;
+  }
+
+  bool isDriverSearchExpired({DateTime? now}) {
+    final at = effectiveDeliveryRequestedAt;
+    // Missing start: do not lock forever via model; UI local timer handles it.
+    // Prefer [ProviderMasterOrderRowActionsX.effectiveDeliveryRequestedAt] fallbacks.
+    if (at == null) return false;
+    final n = (now ?? DateTime.now()).toUtc();
+    return !n.difference(at.toUtc()).isNegative &&
+        n.difference(at.toUtc()) >= kDriverSearchTimeout;
+  }
+
+  bool get hasAssignedDriver =>
+      (driverAssignment?.driverId.trim().isNotEmpty ?? false) ||
+      providerSlices.values.any((s) => s.hasAssignedDriver);
+
+  /// Active shared search that other providers should join (not create another).
+  bool get hasActiveDriverSearch {
+    if (hasAssignedDriver) return false;
+    if (isDriverSearchExpired()) return false;
+    if (globalStatus == GlobalOrderStatus.searchingDriver) return true;
+    if (driverSearchRequestId != null && driverSearchRequestId!.isNotEmpty) {
+      return true;
+    }
+    return providerSlices.values.any(
+      (s) => s.statusWire == ProviderOrderStatusWire.courierRequested,
+    );
+  }
 }
 
 extension ProviderOrderSliceActionsX on ProviderOrderSlice {
-  /// Courier marketplace request — only before an assignment exists.
-  /// Hidden once [courier_requested] so providers cannot spam re-request.
+  /// Courier marketplace request — before assignment (includes re-request).
+  /// Prefer [ProviderMasterOrderRowActionsX] when master context is available.
   bool get canRequestDelivery =>
       fulfillmentMode != FulfillmentMode.pickup &&
-      !isAggregated &&
       !isStoreDelivery &&
       !hasAssignedDriver &&
       (statusWire == ProviderOrderStatusWire.accepted ||
-          statusWire == ProviderOrderStatusWire.preparing);
+          statusWire == ProviderOrderStatusWire.preparing ||
+          statusWire == ProviderOrderStatusWire.courierRequested);
 
   bool get canMarkReadyForPickup =>
       !isStoreDelivery &&
       hasAssignedDriver &&
       (statusWire == ProviderOrderStatusWire.courierAssigned ||
           statusWire == ProviderOrderStatusWire.accepted ||
-          statusWire == ProviderOrderStatusWire.preparing);
+          statusWire == ProviderOrderStatusWire.preparing ||
+          statusWire == ProviderOrderStatusWire.courierRequested);
 
   bool get canStoreDeliver =>
       isStoreDelivery &&
@@ -72,6 +133,119 @@ extension ProviderOrderSliceActionsX on ProviderOrderSlice {
       !isStoreDelivery &&
       hasAssignedDriver &&
       statusWire == ProviderOrderStatusWire.readyForPickup;
+}
+
+extension ProviderMasterOrderRowActionsX on ProviderMasterOrderRow {
+  bool get hasAssignedDriverEffective =>
+      slice.hasAssignedDriver || master.hasAssignedDriver;
+
+  /// Best-known start of the current driver search.
+  DateTime? get effectiveDeliveryRequestedAt {
+    final fromSlice = slice.deliveryRequestedAt;
+    if (fromSlice != null) return fromSlice;
+    final fromMaster = master.effectiveDeliveryRequestedAt;
+    if (fromMaster != null) return fromMaster;
+    // Last resort while still searching: master updatedAt as approximate start.
+    if (slice.statusWire == ProviderOrderStatusWire.courierRequested ||
+        master.globalStatus == GlobalOrderStatus.searchingDriver) {
+      return master.updatedAt;
+    }
+    return null;
+  }
+
+  bool isDriverSearchExpired({DateTime? now}) {
+    final at = effectiveDeliveryRequestedAt;
+    if (at == null) {
+      // No measurable start — unlock re-request only after UI-side timeout;
+      // keep searching so the count-up panel can start from mount.
+      return false;
+    }
+    final n = (now ?? DateTime.now()).toUtc();
+    return !n.difference(at.toUtc()).isNegative &&
+        n.difference(at.toUtc()) >= kDriverSearchTimeout;
+  }
+
+  Duration driverSearchElapsed({DateTime? now}) {
+    final at = effectiveDeliveryRequestedAt;
+    if (at == null) return Duration.zero;
+    final diff = (now ?? DateTime.now()).toUtc().difference(at.toUtc());
+    return diff.isNegative ? Duration.zero : diff;
+  }
+
+  Duration driverSearchRemaining({DateTime? now}) {
+    final left = kDriverSearchTimeout - driverSearchElapsed(now: now);
+    return left.isNegative ? Duration.zero : left;
+  }
+
+  bool get _isCourierEligible =>
+      slice.fulfillmentMode != FulfillmentMode.pickup &&
+      !slice.isStoreDelivery &&
+      !slice.isTerminal;
+
+  bool get _statusAllowsDriverRequest {
+    final w = slice.statusWire;
+    return w == ProviderOrderStatusWire.accepted ||
+        w == ProviderOrderStatusWire.preparing ||
+        w == ProviderOrderStatusWire.courierRequested ||
+        w == ProviderOrderStatusWire.courierAssigned;
+  }
+
+  /// Searching UI while an open request has not expired and no driver yet.
+  bool get isSearchingForDriver {
+    if (!_isCourierEligible || hasAssignedDriverEffective) return false;
+    if (isDriverSearchExpired()) return false;
+    if (slice.statusWire == ProviderOrderStatusWire.courierRequested) {
+      return true;
+    }
+    return master.hasActiveDriverSearch && _statusAllowsDriverRequest;
+  }
+
+  /// Request or re-request a driver (hidden while an active search is running).
+  bool get canRequestDelivery {
+    if (!_isCourierEligible || hasAssignedDriverEffective) return false;
+    if (isSearchingForDriver) return false;
+    final w = slice.statusWire;
+    final baseOk = w == ProviderOrderStatusWire.accepted ||
+        w == ProviderOrderStatusWire.preparing ||
+        w == ProviderOrderStatusWire.courierRequested;
+    if (!baseOk) return false;
+    if (w == ProviderOrderStatusWire.courierRequested) {
+      return isDriverSearchExpired();
+    }
+    // Group: join active search instead of creating a parallel request.
+    if (master.hasActiveDriverSearch && !isDriverSearchExpired()) {
+      return false;
+    }
+    return true;
+  }
+
+  bool get showRerequestDriverLabel =>
+      canRequestDelivery &&
+      (slice.statusWire == ProviderOrderStatusWire.courierRequested ||
+          (master.driverSearchRequestId?.isNotEmpty ?? false) ||
+          effectiveDeliveryRequestedAt != null);
+
+  bool get canMarkReadyForPickup {
+    if (slice.isStoreDelivery || slice.isTerminal) return false;
+    if (!hasAssignedDriverEffective) return false;
+    final w = slice.statusWire;
+    return w == ProviderOrderStatusWire.courierAssigned ||
+        w == ProviderOrderStatusWire.accepted ||
+        w == ProviderOrderStatusWire.preparing ||
+        w == ProviderOrderStatusWire.courierRequested;
+  }
+
+  bool get canStoreDeliver => slice.canStoreDeliver;
+
+  bool get canConfirmHandoff =>
+      !slice.isStoreDelivery &&
+      hasAssignedDriverEffective &&
+      slice.statusWire == ProviderOrderStatusWire.readyForPickup;
+
+  bool get shouldOpenRequestSheetAfterApprove =>
+      master.wouldBeFirstAccepter(providerId) &&
+      slice.fulfillmentMode != FulfillmentMode.pickup &&
+      !slice.isStoreDelivery;
 }
 
 DateTime? providerSlicePlacementTime(ProviderOrderSlice? slice) =>
@@ -191,6 +365,14 @@ bool providerCanViewCustomerContact(
       ps == ProviderSubState.pickedUp;
 }
 
+/// Treat placeholder "Customer" as missing so UI can show a generic label.
+String? _meaningfulCustomerName(String? raw) {
+  final t = raw?.trim();
+  if (t == null || t.isEmpty) return null;
+  if (t.toLowerCase() == 'customer') return null;
+  return t;
+}
+
 /// Display name for provider UI — generic label when contact is hidden.
 String providerDisplayCustomerName(
   MasterOrder master,
@@ -200,11 +382,9 @@ String providerDisplayCustomerName(
   if (!providerCanViewCustomerContact(master, slice)) {
     return genericLabel;
   }
-  return slice.customerName?.trim().isNotEmpty == true
-      ? slice.customerName!.trim()
-      : master.customerName?.trim().isNotEmpty == true
-          ? master.customerName!.trim()
-          : genericLabel;
+  return _meaningfulCustomerName(slice.customerName) ??
+      _meaningfulCustomerName(master.customerName) ??
+      genericLabel;
 }
 
 /// Customer photo for provider UI — null when contact is hidden.

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 
+import '../firestore/toukh_firestore_collections.dart';
 import '../orders/toukh_firestore_timestamps.dart';
 import '../orders/toukh_order_paths.dart';
 import 'toukh_notification.dart';
@@ -506,7 +507,10 @@ class ToukhInboxNotificationWriter {
   /// Best-effort provider profile image for customer notifications.
   Future<String?> fetchProviderImageUrl(String providerId) async {
     try {
-      final snap = await _firestore.collection('providers').doc(providerId).get();
+      final snap = await _firestore
+          .collection(ToukhFirestoreCollections.providers)
+          .doc(providerId)
+          .get();
       final data = snap.data();
       if (data == null) return null;
       for (final key in ['brandImageUrl', 'logoUrl', 'imageUrl', 'photoUrl']) {

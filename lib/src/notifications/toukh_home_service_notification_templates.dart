@@ -1,3 +1,4 @@
+import 'package:toukh_ui/src/firestore/toukh_firestore_collections.dart';
 import 'toukh_home_service_notification_types.dart';
 import 'toukh_notification.dart';
 import 'toukh_notification_category.dart';
@@ -7,7 +8,7 @@ import 'toukh_notification_routes.dart';
 abstract final class ToukhHomeServiceNotificationTemplates {
   ToukhHomeServiceNotificationTemplates._();
 
-  static const _kCollection = 'homeServiceRequests';
+  static const _kCollection = ToukhFirestoreCollections.homeServiceRequests;
   static const _maxNotePreviewLines = 2;
 
   static String providerNewRequestNotificationId(String requestId) =>

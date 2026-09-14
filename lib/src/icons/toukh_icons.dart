@@ -80,6 +80,7 @@ abstract final class ToukhIcons {
   static IconData get delivery => PhosphorIconsRegular.truck;
   static IconData get store => PhosphorIconsRegular.storefront;
 
+  static IconData get arrowCircleUp => PhosphorIconsRegular.arrowCircleUp;
   static IconData get refresh => PhosphorIconsRegular.arrowsClockwise;
   static IconData get logout => PhosphorIconsRegular.signOut;
   static IconData get language => PhosphorIconsRegular.translate;

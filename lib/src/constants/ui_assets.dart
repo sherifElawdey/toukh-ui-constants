@@ -3,6 +3,12 @@ abstract final class ToukhUiAssets {
   ToukhUiAssets._();
 
   static const String brandingAppLogo = 'assets/branding/app_logo.png';
+  static const String brandingAppIcon = 'assets/branding/app_icon.png';
+  static const String brandingDriverLogo = 'assets/branding/driver_logo.png';
+  static const String brandingPartnerLogo = 'assets/branding/partner_logo.png';
+  static const String brandingHavitSplash = 'assets/branding/havit_splash.json';
+  static const String brandingHavitLogo = 'assets/branding/havit_logo.svg';
+  static const String loaderHavit = 'assets/loaders/havit_loader.json';
 
   static const String sectionsRestaurants =
       'assets/sections/Restaurant Food Loading.json';

@@ -17,6 +17,8 @@ abstract final class OrderSplittingEngine {
     required List<CartLineForSplit> lines,
     required Map<String, ProviderDeliveryConfig> providerConfigs,
     double platformFeeEgp = 0,
+    double? customerLat,
+    double? customerLng,
   }) {
     if (lines.isEmpty) {
       return const OrderSplitPlan(
@@ -45,6 +47,8 @@ abstract final class OrderSplittingEngine {
             deliverableLines,
             providerConfigs,
             platformFeeEgp,
+            customerLat: customerLat,
+            customerLng: customerLng,
           );
 
     final explorePlans = _planExplore(exploreLines);
@@ -73,8 +77,10 @@ abstract final class OrderSplittingEngine {
   static OrderSplitPlan _planDeliverable(
     List<CartLineForSplit> lines,
     Map<String, ProviderDeliveryConfig> providerConfigs,
-    double platformFeeEgp,
-  ) {
+    double platformFeeEgp, {
+    double? customerLat,
+    double? customerLng,
+  }) {
     final byProvider = <String, List<CartLineForSplit>>{};
     for (final line in lines) {
       byProvider.putIfAbsent(line.providerId, () => []).add(line);
@@ -117,6 +123,8 @@ abstract final class OrderSplittingEngine {
       storeDeliveryProviderIds: storeDeliveryIds,
       aggregatedCourierProviderIds: aggregatedCourierIds,
       platformFeeEgp: platformFeeEgp,
+      customerLat: customerLat,
+      customerLng: customerLng,
     );
 
     final plans = <SplitProviderOrderPlan>[];

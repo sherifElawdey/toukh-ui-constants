@@ -30,9 +30,11 @@ class ProviderOrderSlice extends Equatable {
     this.driverId,
     this.driverName,
     this.driverPhotoUrl,
+    this.driverPhone,
     this.deliveryRequestId,
     this.createdAt,
     this.acceptedAt,
+    this.deliveryRequestedAt,
     this.readyForPickupAt,
     this.dispatchedAt,
     this.deliveredAt,
@@ -71,10 +73,13 @@ class ProviderOrderSlice extends Equatable {
   final String? driverId;
   final String? driverName;
   final String? driverPhotoUrl;
+  final String? driverPhone;
   final String? deliveryRequestId;
 
   final DateTime? createdAt;
   final DateTime? acceptedAt;
+  /// When this slice (or shared master search) last requested a driver.
+  final DateTime? deliveryRequestedAt;
   final DateTime? readyForPickupAt;
   final DateTime? dispatchedAt;
   final DateTime? deliveredAt;
@@ -148,10 +153,13 @@ class ProviderOrderSlice extends Equatable {
       driverId: _string(m['driverId']),
       driverName: _string(m['driverName']),
       driverPhotoUrl: _string(m['driverPhotoUrl']),
+      driverPhone: _string(m['driverPhone']),
       deliveryRequestId: _string(m['deliveryRequestId']),
       createdAt: ToukhFirestoreTimestamps.toDateTime(m['createdAt']) ??
           ToukhFirestoreTimestamps.toDateTime(m['placedAt']),
       acceptedAt: ToukhFirestoreTimestamps.toDateTime(m['acceptedAt']),
+      deliveryRequestedAt:
+          ToukhFirestoreTimestamps.toDateTime(m['deliveryRequestedAt']),
       readyForPickupAt:
           ToukhFirestoreTimestamps.toDateTime(m['readyForPickupAt']),
       dispatchedAt: ToukhFirestoreTimestamps.toDateTime(m['dispatchedAt']),
@@ -198,11 +206,15 @@ class ProviderOrderSlice extends Equatable {
         if (driverId != null) 'driverId': driverId,
         if (driverName != null) 'driverName': driverName,
         if (driverPhotoUrl != null) 'driverPhotoUrl': driverPhotoUrl,
+        if (driverPhone != null) 'driverPhone': driverPhone,
         if (deliveryRequestId != null) 'deliveryRequestId': deliveryRequestId,
         if (createdAt != null)
           'createdAt': ToukhFirestoreTimestamps.fieldFromDateTime(createdAt),
         if (acceptedAt != null)
           'acceptedAt': ToukhFirestoreTimestamps.fieldFromDateTime(acceptedAt),
+        if (deliveryRequestedAt != null)
+          'deliveryRequestedAt':
+              ToukhFirestoreTimestamps.fieldFromDateTime(deliveryRequestedAt),
         if (readyForPickupAt != null)
           'readyForPickupAt':
               ToukhFirestoreTimestamps.fieldFromDateTime(readyForPickupAt),
@@ -271,9 +283,11 @@ class ProviderOrderSlice extends Equatable {
         driverId,
         driverName,
         driverPhotoUrl,
+        driverPhone,
         deliveryRequestId,
         createdAt,
         acceptedAt,
+        deliveryRequestedAt,
         readyForPickupAt,
         dispatchedAt,
         deliveredAt,

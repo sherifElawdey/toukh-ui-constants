@@ -39,6 +39,7 @@ class ToukhPushMessaging {
   ToukhNotificationRecipient? _recipient;
   FirebaseFirestore? _firestore;
   String? _syncedUid;
+  String? _pendingSyncUid;
   bool _initialized = false;
 
   /// Shows a tray notification for background/data-only FCM (call after Firebase init).
@@ -54,7 +55,7 @@ class ToukhPushMessaging {
 
     final n = message.notification;
     final title =
-        n?.title ?? message.data['title']?.toString().trim() ?? 'طوخ';
+        n?.title ?? message.data['title']?.toString().trim() ?? 'Havit';
     final body = n?.body ??
         message.data['body']?.toString() ??
         message.data['description']?.toString() ??
@@ -189,9 +190,9 @@ class ToukhPushMessaging {
             recipient == null) {
           return;
         }
-        await ToukhFcmTokenSync.syncIfNeeded(
+        // Live-read so we merge into existing devices instead of wiping them.
+        await ToukhFcmTokenSync.syncOnAppOpen(
           uid: uid,
-          existingFcmTokens: const [],
           firestore: firestore,
           recipient: recipient,
           getCurrentToken: () async => token,
@@ -200,6 +201,11 @@ class ToukhPushMessaging {
     }
 
     _initialized = true;
+    final pendingUid = _pendingSyncUid;
+    if (pendingUid != null && pendingUid.isNotEmpty) {
+      _pendingSyncUid = null;
+      unawaited(syncToken(pendingUid));
+    }
   }
 
   Future<void> requestPermission() async {
@@ -217,62 +223,82 @@ class ToukhPushMessaging {
     String uid, {
     List<String> existingFcmTokens = const [],
   }) async {
-    if (!_initialized) return;
     if (kIsWeb) return;
     _syncedUid = uid;
-
-    Future<void> syncWithRegistry() async {
-      final firestore = _firestore;
-      final recipient = _recipient;
-      if (firestore == null || recipient == null) return;
-      await ToukhFcmTokenSync.syncIfNeeded(
-        uid: uid,
-        existingFcmTokens: existingFcmTokens,
-        firestore: firestore,
-        recipient: recipient,
-        getCurrentToken: getToken,
-      );
+    if (!_initialized) {
+      // Auth often fires before push bootstrap; retry after [initialize].
+      _pendingSyncUid = uid;
+      debugPrint('FCM syncToken deferred until push init (uid=$uid)');
+      return;
     }
 
     if (_firestore != null && _recipient != null) {
-      Future<void> syncLive() => ToukhFcmTokenSync.syncOnAppOpen(
-            uid: uid,
-            firestore: _firestore!,
-            recipient: _recipient!,
-            getCurrentToken: getToken,
-          );
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-        try {
-          await syncLive();
-        } on FirebaseException catch (e) {
-          debugPrint('FCM syncToken iOS deferred: ${e.code}');
-        }
-        return;
+      final ok = await _syncLiveWithRetries(uid);
+      if (!ok) {
+        debugPrint(
+          'FCM syncToken: token not registered yet; will retry on resume',
+        );
       }
-      await syncLive();
       return;
     }
 
     final persist = _persistToken;
     if (persist == null) return;
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-      try {
-        final token = await ToukhFcmApns.getToken();
-        if (token != null && token.isNotEmpty) {
-          await persist(uid, token);
-        }
-      } on FirebaseException catch (e) {
-        debugPrint('FCM syncToken iOS deferred: ${e.code}');
-      }
-      return;
-    }
     try {
-      final token = await FirebaseMessaging.instance.getToken();
+      final token = await ToukhFcmApns.getToken();
       if (token != null && token.isNotEmpty) {
         await persist(uid, token);
       }
     } catch (e, st) {
       debugPrint('FCM syncToken failed: $e\n$st');
+    }
+  }
+
+  Future<bool> _syncLiveWithRetries(String uid) async {
+    final firestore = _firestore;
+    final recipient = _recipient;
+    if (firestore == null || recipient == null) return false;
+
+    // Attempt immediately, then a couple delayed retries (APNS / permission).
+    for (var i = 0; i < 3; i++) {
+      if (i > 0) {
+        await Future<void>.delayed(Duration(seconds: 2 * i));
+      }
+      try {
+        final ok = await ToukhFcmTokenSync.syncOnAppOpen(
+          uid: uid,
+          firestore: firestore,
+          recipient: recipient,
+          getCurrentToken: getToken,
+        );
+        if (ok) return true;
+      } on FirebaseException catch (e) {
+        debugPrint('FCM syncLive attempt ${i + 1}: ${e.code}');
+      } catch (e) {
+        debugPrint('FCM syncLive attempt ${i + 1}: $e');
+      }
+    }
+    return false;
+  }
+
+  /// Removes this device token from the signed-in profile, then clears local sync state.
+  Future<void> removeDeviceTokenOnSignOut(String uid) async {
+    if (kIsWeb) return;
+    final firestore = _firestore;
+    final recipient = _recipient;
+    if (firestore != null && recipient != null && uid.isNotEmpty) {
+      await ToukhFcmTokenSync.removeCurrentDeviceToken(
+        uid: uid,
+        firestore: firestore,
+        recipient: recipient,
+        getCurrentToken: getToken,
+      );
+    }
+    if (_syncedUid == uid) {
+      _syncedUid = null;
+    }
+    if (_pendingSyncUid == uid) {
+      _pendingSyncUid = null;
     }
   }
 
@@ -287,7 +313,7 @@ class ToukhPushMessaging {
 
     final n = message.notification;
     final data = message.data;
-    final title = n?.title ?? data['title'] ?? 'طوخ';
+    final title = n?.title ?? data['title'] ?? 'Havit';
     final body = n?.body ?? data['body'] ?? data['description'] ?? '';
 
     final parsed = _notificationFromMessage(message);
@@ -324,7 +350,7 @@ class ToukhPushMessaging {
     if (orderId != null && orderId.isNotEmpty) {
       return ToukhNotification(
         id: data[ToukhFcmDataKeys.notificationId]?.toString() ?? orderId,
-        title: data['title']?.toString() ?? 'طوخ',
+        title: data['title']?.toString() ?? 'Havit',
         description:
             data['body']?.toString() ?? data['description']?.toString() ?? '',
         imageUrl: data[ToukhFcmDataKeys.imageUrl]?.toString(),
@@ -345,7 +371,7 @@ class ToukhPushMessaging {
       return ToukhNotification(
         id: data[ToukhFcmDataKeys.notificationId]?.toString() ??
             'ride_$rideId',
-        title: data['title']?.toString() ?? 'طوخ',
+        title: data['title']?.toString() ?? 'Havit',
         description:
             data['body']?.toString() ?? data['description']?.toString() ?? '',
         imageUrl: data[ToukhFcmDataKeys.imageUrl]?.toString(),

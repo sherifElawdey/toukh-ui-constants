@@ -10,6 +10,7 @@ class Location extends Equatable {
     required this.lng,
     this.label,
     this.formattedAddress,
+    this.serviceAreaId,
   });
 
   final double lat;
@@ -21,17 +22,22 @@ class Location extends Equatable {
   /// Long form address line for display (e.g. "15 Ramsis St, Garden City").
   final String? formattedAddress;
 
+  /// Admin service-area polygon id for the delivery address, when known.
+  final String? serviceAreaId;
+
   Location copyWith({
     double? lat,
     double? lng,
     String? label,
     String? formattedAddress,
+    String? serviceAreaId,
   }) {
     return Location(
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
       label: label ?? this.label,
       formattedAddress: formattedAddress ?? this.formattedAddress,
+      serviceAreaId: serviceAreaId ?? this.serviceAreaId,
     );
   }
 
@@ -42,6 +48,8 @@ class Location extends Equatable {
       if (label != null && label!.isNotEmpty) 'label': label,
       if (formattedAddress != null && formattedAddress!.isNotEmpty)
         'formattedAddress': formattedAddress,
+      if (serviceAreaId != null && serviceAreaId!.isNotEmpty)
+        'serviceAreaId': serviceAreaId,
     };
   }
 
@@ -51,6 +59,7 @@ class Location extends Equatable {
       lng: (map['lng'] as num?)?.toDouble() ?? 0,
       label: _string(map['label']),
       formattedAddress: _string(map['formattedAddress']),
+      serviceAreaId: _string(map['serviceAreaId']),
     );
   }
 
@@ -60,5 +69,6 @@ class Location extends Equatable {
   }
 
   @override
-  List<Object?> get props => [lat, lng, label, formattedAddress];
+  List<Object?> get props =>
+      [lat, lng, label, formattedAddress, serviceAreaId];
 }

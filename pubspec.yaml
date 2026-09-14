@@ -41,5 +41,12 @@ flutter:
   uses-material-design: true
   assets:
     - assets/branding/app_logo.png
+    - assets/branding/app_icon.png
+    - assets/branding/driver_logo.png
+    - assets/branding/partner_logo.png
+    - assets/branding/havit_splash.json
+    - assets/branding/havit_icon.svg
+    - assets/branding/havit_logo.svg
     - assets/sections/
+    - assets/loaders/
     - assets/placeholders/

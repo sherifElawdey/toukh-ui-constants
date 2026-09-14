@@ -18,6 +18,8 @@ void main() {
           'p1': const ProviderDeliveryConfig(
             providerId: 'p1',
             offersDelivery: true,
+            deliveryFeeEgp: 15,
+            pricingMode: StoreDeliveryPricingMode.fixed,
           ),
         },
       );
@@ -25,9 +27,63 @@ void main() {
       expect(plan.providerOrders.first.fulfillmentMode, FulfillmentMode.store);
       expect(plan.aggregatedGroupId, isNull);
       expect(plan.subtotalEgp, 100);
+      expect(plan.deliveryFeeEgp, 15);
+      expect(plan.providerOrders.first.deliveryFeeEgp, 15);
     });
 
-    test('explore lines have no delivery task or fee', () {
+    test('store free delivery stays zero', () {
+      final plan = OrderSplittingEngine.plan(
+        lines: const [
+          CartLineForSplit(
+            providerId: 'p1',
+            itemId: 'i1',
+            title: 'Burger',
+            quantity: 1,
+            unitPrice: 40,
+          ),
+        ],
+        providerConfigs: {
+          'p1': const ProviderDeliveryConfig(
+            providerId: 'p1',
+            offersDelivery: true,
+            freeDelivery: true,
+            deliveryFeeEgp: 20,
+          ),
+        },
+      );
+      expect(plan.deliveryFeeEgp, 0);
+    });
+
+    test('store perKm uses haversine distance', () {
+      final plan = OrderSplittingEngine.plan(
+        lines: const [
+          CartLineForSplit(
+            providerId: 'p1',
+            itemId: 'i1',
+            title: 'Burger',
+            quantity: 1,
+            unitPrice: 40,
+          ),
+        ],
+        providerConfigs: {
+          'p1': const ProviderDeliveryConfig(
+            providerId: 'p1',
+            offersDelivery: true,
+            deliveryFeeEgp: 10,
+            pricingMode: StoreDeliveryPricingMode.perKm,
+            storeLat: 30.0,
+            storeLng: 31.0,
+          ),
+        },
+        customerLat: 30.01,
+        customerLng: 31.0,
+      );
+      expect(plan.deliveryFeeEgp, greaterThan(0));
+      final expectedKm = DeliveryFeeCalculator.haversineKm(30.0, 31.0, 30.01, 31.0);
+      expect(plan.deliveryFeeEgp, (expectedKm * 10).roundToDouble());
+    });
+
+    test('explore lines have no delivery fee', () {
       final plan = OrderSplittingEngine.plan(
         lines: const [
           CartLineForSplit(
@@ -41,9 +97,8 @@ void main() {
         ],
         providerConfigs: const {},
       );
-      expect(plan.needsDeliveryTask, isFalse);
       expect(plan.deliveryFeeEgp, 0);
-      expect(plan.providerOrders.single.fulfillmentMode, FulfillmentMode.pickup);
+      expect(plan.providerOrders.single.fulfillmentMode, FulfillmentMode.courier);
       expect(plan.subtotalEgp, 50);
     });
 

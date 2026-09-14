@@ -1,3 +1,5 @@
+import 'package:toukh_ui/src/firestore/toukh_firestore_collections.dart';
+
 /// Who receives an inbox notification (determines Firestore parent collection).
 enum ToukhNotificationRecipient {
   customer,
@@ -7,11 +9,11 @@ enum ToukhNotificationRecipient {
   String get collectionName {
     switch (this) {
       case ToukhNotificationRecipient.customer:
-        return 'users';
+        return ToukhFirestoreCollections.users;
       case ToukhNotificationRecipient.provider:
-        return 'providers';
+        return ToukhFirestoreCollections.providers;
       case ToukhNotificationRecipient.driver:
-        return 'drivers';
+        return ToukhFirestoreCollections.drivers;
     }
   }
 }

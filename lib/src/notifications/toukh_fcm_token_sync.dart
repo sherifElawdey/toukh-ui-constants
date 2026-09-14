@@ -24,7 +24,7 @@ abstract final class ToukhFcmTokenSync {
 
   /// Registers the current device FCM token on the profile when it is not
   /// already in [existingFcmTokens].
-  static Future<void> syncIfNeeded({
+  static Future<bool> syncIfNeeded({
     required String uid,
     required List<String> existingFcmTokens,
     required FirebaseFirestore firestore,
@@ -33,25 +33,61 @@ abstract final class ToukhFcmTokenSync {
   }) async {
     try {
       final token = await (getCurrentToken ?? ToukhFcmApns.getToken)();
-      if (token == null || token.isEmpty) return;
-      if (existingFcmTokens.contains(token)) return;
+      if (token == null || token.isEmpty) {
+        debugPrint(
+          'ToukhFcmTokenSync.syncIfNeeded: no FCM token yet '
+          '(uid=$uid recipient=${recipient.name})',
+        );
+        return false;
+      }
+      if (existingFcmTokens.contains(token)) {
+        debugPrint(
+          'ToukhFcmTokenSync: token already on ${recipient.collectionName}/$uid',
+        );
+        return true;
+      }
 
-      final merged = mergeFcmToken(existingFcmTokens, token);
-      await firestore.collection(recipient.collectionName).doc(uid).set(
+      // Atomic add first (survives concurrent writers), then trim if needed.
+      final ref = firestore.collection(recipient.collectionName).doc(uid);
+      await ref.set(
         {
-          'fcmTokens': merged,
+          'fcmTokens': FieldValue.arrayUnion([token]),
           'updatedAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),
       );
+
+      final snap = await ref.get();
+      final live = (snap.data()?['fcmTokens'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .where((t) => t.isNotEmpty)
+              .toList() ??
+          <String>[];
+      if (live.length > maxFcmTokens) {
+        final trimmed = live.sublist(live.length - maxFcmTokens);
+        await ref.set(
+          {
+            'fcmTokens': trimmed,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+      }
+
+      debugPrint(
+        'ToukhFcmTokenSync: saved token on ${recipient.collectionName}/$uid '
+        '(len=${live.length.clamp(0, maxFcmTokens)})',
+      );
+      return true;
     } catch (e, st) {
       debugPrint('ToukhFcmTokenSync.syncIfNeeded failed: $e\n$st');
+      return false;
     }
   }
 
   /// Reads live [fcmTokens] from Firestore, then registers the current device
   /// token when it is not already in the profile list.
-  static Future<void> syncOnAppOpen({
+  static Future<bool> syncOnAppOpen({
     required String uid,
     required FirebaseFirestore firestore,
     required ToukhNotificationRecipient recipient,
@@ -66,7 +102,7 @@ abstract final class ToukhFcmTokenSync {
               .where((t) => t.isNotEmpty)
               .toList() ??
           <String>[];
-      await syncIfNeeded(
+      return syncIfNeeded(
         uid: uid,
         existingFcmTokens: existing,
         firestore: firestore,
@@ -75,6 +111,34 @@ abstract final class ToukhFcmTokenSync {
       );
     } catch (e, st) {
       debugPrint('ToukhFcmTokenSync.syncOnAppOpen failed: $e\n$st');
+      return false;
+    }
+  }
+
+  /// Removes this device's current FCM token from the profile list (sign-out).
+  static Future<void> removeCurrentDeviceToken({
+    required String uid,
+    required FirebaseFirestore firestore,
+    required ToukhNotificationRecipient recipient,
+    Future<String?> Function()? getCurrentToken,
+  }) async {
+    try {
+      final token = await (getCurrentToken ?? ToukhFcmApns.getToken)();
+      if (token == null || token.isEmpty) return;
+
+      final ref = firestore.collection(recipient.collectionName).doc(uid);
+      await ref.set(
+        {
+          'fcmTokens': FieldValue.arrayRemove([token]),
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+      debugPrint(
+        'ToukhFcmTokenSync: removed token from ${recipient.collectionName}/$uid',
+      );
+    } catch (e, st) {
+      debugPrint('ToukhFcmTokenSync.removeCurrentDeviceToken failed: $e\n$st');
     }
   }
 }

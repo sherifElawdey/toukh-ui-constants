@@ -22,6 +22,8 @@ class MasterOrder extends Equatable {
     required this.deliveryAddress,
     this.providerStatusMap = const {},
     this.deliveryTaskId,
+    this.driverSearchRequestId,
+    this.deliveryRequestedAt,
     this.aggregatedGroupId,
     this.driverAssignment,
     this.subtotalEgp = 0,
@@ -54,6 +56,10 @@ class MasterOrder extends Equatable {
   final Map<String, ProviderSubState> providerStatusMap;
   final Location deliveryAddress;
   final String? deliveryTaskId;
+  /// Active open delivery request while searching for a driver.
+  final String? driverSearchRequestId;
+  /// When the current shared driver search started.
+  final DateTime? deliveryRequestedAt;
   final String? aggregatedGroupId;
   final DriverAssignment? driverAssignment;
   final double subtotalEgp;
@@ -97,6 +103,8 @@ class MasterOrder extends Equatable {
     List<ProviderOrderRef>? providerOrderRefs,
     Map<String, ProviderSubState>? providerStatusMap,
     String? deliveryTaskId,
+    String? driverSearchRequestId,
+    DateTime? deliveryRequestedAt,
     DriverAssignment? driverAssignment,
     bool? ratingCompleted,
     List<String>? providerIds,
@@ -119,6 +127,9 @@ class MasterOrder extends Equatable {
       providerStatusMap: providerStatusMap ?? this.providerStatusMap,
       deliveryAddress: deliveryAddress,
       deliveryTaskId: deliveryTaskId ?? this.deliveryTaskId,
+      driverSearchRequestId:
+          driverSearchRequestId ?? this.driverSearchRequestId,
+      deliveryRequestedAt: deliveryRequestedAt ?? this.deliveryRequestedAt,
       aggregatedGroupId: aggregatedGroupId,
       driverAssignment: driverAssignment ?? this.driverAssignment,
       subtotalEgp: subtotalEgp,
@@ -155,6 +166,11 @@ class MasterOrder extends Equatable {
         ),
         'deliveryAddress': deliveryAddress.toMap(),
         if (deliveryTaskId != null) 'deliveryTaskId': deliveryTaskId,
+        if (driverSearchRequestId != null)
+          'driverSearchRequestId': driverSearchRequestId,
+        if (deliveryRequestedAt != null)
+          'deliveryRequestedAt':
+              Timestamp.fromDate(deliveryRequestedAt!.toUtc()),
         if (aggregatedGroupId != null) 'aggregatedGroupId': aggregatedGroupId,
         if (driverAssignment != null) 'driverAssignment': driverAssignment!.toMap(),
         'subtotalEgp': subtotalEgp,
@@ -229,6 +245,8 @@ class MasterOrder extends Equatable {
         Map<String, dynamic>.from(map['deliveryAddress'] as Map? ?? {}),
       ),
       deliveryTaskId: map['deliveryTaskId'] as String?,
+      driverSearchRequestId: map['driverSearchRequestId'] as String?,
+      deliveryRequestedAt: _parseDate(map['deliveryRequestedAt']),
       aggregatedGroupId: map['aggregatedGroupId'] as String?,
       driverAssignment: map['driverAssignment'] != null
           ? DriverAssignment.fromMap(
@@ -279,6 +297,8 @@ class MasterOrder extends Equatable {
         providerStatusMap,
         deliveryAddress,
         deliveryTaskId,
+        driverSearchRequestId,
+        deliveryRequestedAt,
         aggregatedGroupId,
         driverAssignment,
         subtotalEgp,
