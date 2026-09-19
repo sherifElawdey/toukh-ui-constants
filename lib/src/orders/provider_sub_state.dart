@@ -31,6 +31,7 @@ enum ProviderSubState {
       case 'ready_for_pickup':
         return ProviderSubState.readyForPickup;
       case 'picked_up':
+      case 'out_for_delivery':
         return ProviderSubState.pickedUp;
       case 'pending':
       case 'placed':
