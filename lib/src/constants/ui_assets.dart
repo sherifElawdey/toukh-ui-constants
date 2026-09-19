@@ -7,7 +7,10 @@ abstract final class ToukhUiAssets {
   static const String brandingDriverLogo = 'assets/branding/driver_logo.png';
   static const String brandingPartnerLogo = 'assets/branding/partner_logo.png';
   static const String brandingHavitSplash = 'assets/branding/havit_splash.json';
-  static const String brandingHavitLogo = 'assets/branding/havit_logo.svg';
+  /// Full wide logo (PNG cropped from havit_logo.svg viewBox).
+  static const String brandingHavitLogo = 'assets/branding/havit_logo.png';
+  /// Raster square icon (extracted from havit_icon.svg wrapper).
+  static const String brandingHavitIcon = 'assets/branding/havit_icon.png';
   static const String loaderHavit = 'assets/loaders/havit_loader.json';
 
   static const String sectionsRestaurants =
@@ -38,6 +41,8 @@ abstract final class ToukhUiAssets {
       'assets/placeholders/homesales_services.svg';
   static const String placeholderTaxi =
       'assets/placeholders/driver_service.svg';
+  static const String placeholderProfileAvatar =
+      'assets/placeholders/profile_avatar.png';
 }
 
 /// Must match `name:` in [pubspec.yaml] — used for [Image.asset] `package:`.
@@ -73,6 +78,11 @@ enum ToukhServiceCategory {
   homeSales(
     lottieAsset: ToukhUiAssets.sectionsHomeSales,
     placeholderAsset: ToukhUiAssets.placeholderHomeSales,
+    defaultLoop: true,
+  ),
+  otherShops(
+    lottieAsset: ToukhUiAssets.sectionsGrocery,
+    placeholderAsset: ToukhUiAssets.placeholderGrocery,
     defaultLoop: true,
   ),
   taxi(

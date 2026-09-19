@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../constants/ui_assets.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_sizes.dart';
 import '../widgets/app_button.dart';
@@ -13,8 +14,8 @@ Future<void> showAppMandatoryUpdateDialog(
   required String description,
   required Uri storeUri,
   required String updateButtonLabel,
-  String imageAsset = 'assets/branding/app_logo.png',
-  String? imagePackage = 'toukh_ui',
+  String imageAsset = ToukhUiAssets.brandingHavitIcon,
+  String? imagePackage = kToukhUiPackageName,
   double imageWidth = 120,
   double imageHeight = 120,
 }) {

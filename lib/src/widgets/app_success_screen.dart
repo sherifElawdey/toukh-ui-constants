@@ -13,7 +13,7 @@ class AppSuccessScreen extends StatelessWidget {
     this.description,
     required this.actionText,
     required this.actionOnPressed,
-    this.imagePath = ToukhUiAssets.brandingAppLogo,
+    this.imagePath = ToukhUiAssets.brandingHavitIcon,
     this.imageAssetPackage = kToukhUiPackageName,
   });
 

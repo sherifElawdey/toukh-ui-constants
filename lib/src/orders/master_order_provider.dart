@@ -235,9 +235,40 @@ extension ProviderMasterOrderRowActionsX on ProviderMasterOrderRow {
         w == ProviderOrderStatusWire.courierRequested;
   }
 
-  bool get canStoreDeliver => slice.canStoreDeliver;
+  bool get canStoreDeliver {
+    if (!slice.isStoreDelivery || slice.isOutgoing || slice.isTerminal) {
+      return false;
+    }
+    final w = slice.statusWire;
+    if (w != ProviderOrderStatusWire.accepted &&
+        w != ProviderOrderStatusWire.preparing) {
+      return false;
+    }
+    // First assign, or reassign while still waiting for driver accept.
+    return true;
+  }
 
-  bool get canConfirmHandoff =>
+  /// Soft store assign pending — driver has not accepted yet.
+  bool get isAwaitingStoreDriverAccept {
+    if (!slice.isStoreDelivery || slice.isOutgoing || slice.isTerminal) {
+      return false;
+    }
+    if (!hasAssignedDriverEffective) return false;
+    final assignment = master.driverAssignment;
+    if (assignment == null || assignment.driverId.trim().isEmpty) {
+      return false;
+    }
+    final reqId = assignment.deliveryRequestId?.trim() ?? '';
+    if (reqId.isNotEmpty) return false;
+    if (assignment.acceptedAt != null) return false;
+    final st = assignment.status.trim();
+    return st.isEmpty || st == 'assigned';
+  }
+
+  bool get canConfirmHandoff => false;
+
+  /// Courier orders ready for pickup: show QR for the driver to scan.
+  bool get canShowPickupQr =>
       !slice.isStoreDelivery &&
       hasAssignedDriverEffective &&
       slice.statusWire == ProviderOrderStatusWire.readyForPickup;

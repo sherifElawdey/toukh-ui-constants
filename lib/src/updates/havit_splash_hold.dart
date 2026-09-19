@@ -8,7 +8,7 @@ class HavitSplashHold extends ChangeNotifier {
 
   static final HavitSplashHold instance = HavitSplashHold._();
 
-  static const Duration minDuration = Duration(seconds: 2);
+  static const Duration minDuration = Duration(seconds: 4);
 
   bool _started = false;
   bool _elapsed = false;
@@ -16,7 +16,7 @@ class HavitSplashHold extends ChangeNotifier {
 
   bool get elapsed => _elapsed;
 
-  /// Starts the 2s hold once per app launch. Safe to call repeatedly.
+  /// Starts the 4s hold once per app launch. Safe to call repeatedly.
   void start() {
     if (_started) return;
     _started = true;

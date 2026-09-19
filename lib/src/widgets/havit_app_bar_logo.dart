@@ -1,25 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../constants/ui_assets.dart';
 
-/// Shared Havit wordmark for shell app bars.
+/// Full Havit wordmark for shell app bars.
+///
+/// Loads the PNG cropped from [havit_logo.svg] (that file embeds a raster;
+/// flutter_svg cannot paint it). Aspect is the wide logo (~457×202).
 class HavitAppBarLogo extends StatelessWidget {
   const HavitAppBarLogo({
     super.key,
-    this.height = 28,
+    this.height = 32,
   });
 
   final double height;
 
   @override
   Widget build(BuildContext context) {
-    return SvgPicture.asset(
+    // Preserve wide logo aspect (~2.26:1) without overflowing the AppBar title.
+    final width = height * (457 / 202);
+    return Image.asset(
       ToukhUiAssets.brandingHavitLogo,
       package: kToukhUiPackageName,
       height: height,
+      width: width,
       fit: BoxFit.contain,
       alignment: Alignment.centerLeft,
+      filterQuality: FilterQuality.high,
     );
   }
 }

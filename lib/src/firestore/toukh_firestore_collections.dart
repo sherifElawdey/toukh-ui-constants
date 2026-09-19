@@ -34,7 +34,6 @@ abstract final class ToukhFirestoreCollections {
   static const suggestions = 'suggestions';
   static const homeServiceChatReports = 'homeServiceChatReports';
   static const serviceAreas = 'service_areas';
-  static const driverRatings = 'driverRatings';
   static const dispatchAuditLogs = 'dispatchAuditLogs';
   static const homeServiceChats = 'homeServiceChats';
   static const serviceProviderPresence = 'serviceProviderPresence';
@@ -53,6 +52,9 @@ abstract final class ToukhFirestoreCollections {
   static const menuItems = 'items';
   static const gallery = 'gallery';
   static const reviews = 'reviews';
+
+  /// Driver reviews: `drivers/{driverId}/Ratings/{ratingId}`.
+  static const driverRatings = 'Ratings';
   static const transactions = 'transactions';
   static const timelineEvents = 'events';
   static const blackPoints = 'blackPoints';

@@ -22,7 +22,7 @@ import 'toukh_visit_reminder_scheduler.dart';
 
 typedef FcmTokenPersister = Future<void> Function(String uid, String token);
 typedef NotificationTapHandler = Future<void> Function(ToukhNotification message);
-typedef ForegroundNotificationHandler = void Function(ToukhNotification message);
+typedef ForegroundNotificationHandler = bool Function(ToukhNotification message);
 
 /// Shared FCM + local notifications bootstrap for Toukh apps.
 class ToukhPushMessaging {
@@ -41,6 +41,7 @@ class ToukhPushMessaging {
   String? _syncedUid;
   String? _pendingSyncUid;
   bool _initialized = false;
+  Future<void>? _syncInFlight;
 
   /// Shows a tray notification for background/data-only FCM (call after Firebase init).
   ///
@@ -53,21 +54,16 @@ class ToukhPushMessaging {
       Map<String, dynamic>.from(message.data),
     );
 
-    final n = message.notification;
-    final title =
-        n?.title ?? message.data['title']?.toString().trim() ?? 'Havit';
-    final body = n?.body ??
-        message.data['body']?.toString() ??
-        message.data['description']?.toString() ??
+    // FCM already displays the system tray when a `notification` block is present.
+    if (message.notification != null) return;
+
+    final title = _nonEmpty(message.data['title']?.toString()) ?? 'Havit';
+    final body = _nonEmpty(message.data['body']?.toString()) ??
+        _nonEmpty(message.data['description']?.toString()) ??
         '';
 
     if (title.isEmpty && body.isEmpty) {
       debugPrint('FCM background: empty payload ${message.messageId}');
-      return;
-    }
-
-    // iOS already displays alerts when the FCM `notification` block is present.
-    if (defaultTargetPlatform == TargetPlatform.iOS && n != null) {
       return;
     }
 
@@ -107,6 +103,11 @@ class ToukhPushMessaging {
       ),
       payload: jsonEncode(message.data),
     );
+  }
+
+  static String? _nonEmpty(String? s) {
+    final t = s?.trim();
+    return (t == null || t.isEmpty) ? null : t;
   }
 
   /// Legacy handler — prefer per-app handlers with [DefaultFirebaseOptions].
@@ -160,10 +161,26 @@ class ToukhPushMessaging {
     }
 
     await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: true,
+      alert: false,
       badge: true,
-      sound: true,
+      sound: false,
     );
+
+    // On iOS, APNs registration only happens after permission + register.
+    // Re-request when already authorized so cold starts still call
+    // registerForRemoteNotifications (needed for getAPNSToken).
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      final settings =
+          await FirebaseMessaging.instance.getNotificationSettings();
+      if (settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional) {
+        await FirebaseMessaging.instance.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      }
+    }
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpened);
@@ -232,6 +249,24 @@ class ToukhPushMessaging {
       return;
     }
 
+    final existing = _syncInFlight;
+    if (existing != null) {
+      await existing;
+      return;
+    }
+
+    final future = _syncTokenBody(uid);
+    _syncInFlight = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_syncInFlight, future)) {
+        _syncInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _syncTokenBody(String uid) async {
     if (_firestore != null && _recipient != null) {
       final ok = await _syncLiveWithRetries(uid);
       if (!ok) {
@@ -313,15 +348,24 @@ class ToukhPushMessaging {
 
     final n = message.notification;
     final data = message.data;
-    final title = n?.title ?? data['title'] ?? 'Havit';
-    final body = n?.body ?? data['body'] ?? data['description'] ?? '';
+    final title = _nonEmpty(n?.title) ??
+        _nonEmpty(data['title']?.toString()) ??
+        'Havit';
+    final body = _nonEmpty(n?.body) ??
+        _nonEmpty(data['body']?.toString()) ??
+        _nonEmpty(data['description']?.toString()) ??
+        '';
+
+    if (title.isEmpty && body.isEmpty) {
+      debugPrint('FCM foreground: empty payload ${message.messageId}');
+      return;
+    }
 
     final parsed = _notificationFromMessage(message);
     final handler = _onForegroundNotification;
-    final isOrderPlaced = parsed?.type == ToukhOrderNotificationTypes.orderPlaced;
-    if (handler != null && parsed != null && isOrderPlaced) {
-      handler(parsed);
-      return;
+    if (handler != null && parsed != null) {
+      final handled = handler(parsed);
+      if (handled) return;
     }
 
     final imageUrl = _resolveImageUrl(message);
