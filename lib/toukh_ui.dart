@@ -104,6 +104,7 @@ export 'src/widgets/custom_text.dart';
 export 'src/widgets/toukh_service_lottie.dart';
 export 'src/widgets/toukh_section_placeholder.dart';
 export 'src/widgets/toukh_section_empty_state.dart';
+export 'src/widgets/coming_soon_empty_state.dart';
 export 'src/widgets/location_permission_tile.dart';
 export 'src/widgets/permission_request_banner.dart';
 export 'src/widgets/toukh_refresh.dart';
