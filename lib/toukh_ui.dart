@@ -38,6 +38,7 @@ export 'src/orders/provider_delivery_config.dart';
 export 'src/orders/provider_order_ref.dart';
 export 'src/orders/provider_sub_state.dart';
 export 'src/firestore/toukh_firestore_collections.dart';
+export 'src/flags/toukh_feature_flags.dart';
 export 'src/orders/toukh_firestore_timestamps.dart';
 export 'src/orders/toukh_order_paths.dart';
 export 'src/models/location.dart';
