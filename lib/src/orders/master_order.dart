@@ -28,6 +28,8 @@ class MasterOrder extends Equatable {
     this.driverAssignment,
     this.subtotalEgp = 0,
     this.deliveryFeeEgp = 0,
+    this.serviceFeeEgp = 0,
+    this.serviceFeeSnapshot,
     this.totalEgp = 0,
     this.paymentMethod,
     this.isPaid = false,
@@ -64,6 +66,10 @@ class MasterOrder extends Equatable {
   final DriverAssignment? driverAssignment;
   final double subtotalEgp;
   final double deliveryFeeEgp;
+  /// Customer service fee (platform), frozen at place time.
+  final double serviceFeeEgp;
+  /// Audit snapshot of fee settings used at place (`mode` / `percent` / `amountEgp`).
+  final Map<String, dynamic>? serviceFeeSnapshot;
   final double totalEgp;
   final String? paymentMethod;
   final bool isPaid;
@@ -134,6 +140,8 @@ class MasterOrder extends Equatable {
       driverAssignment: driverAssignment ?? this.driverAssignment,
       subtotalEgp: subtotalEgp,
       deliveryFeeEgp: deliveryFeeEgp,
+      serviceFeeEgp: serviceFeeEgp,
+      serviceFeeSnapshot: serviceFeeSnapshot,
       totalEgp: totalEgp,
       paymentMethod: paymentMethod,
       isPaid: isPaid,
@@ -175,6 +183,8 @@ class MasterOrder extends Equatable {
         if (driverAssignment != null) 'driverAssignment': driverAssignment!.toMap(),
         'subtotalEgp': subtotalEgp,
         'deliveryFeeEgp': deliveryFeeEgp,
+        'serviceFeeEgp': serviceFeeEgp,
+        if (serviceFeeSnapshot != null) 'serviceFeeSnapshot': serviceFeeSnapshot,
         'totalEgp': totalEgp,
         if (paymentMethod != null) 'paymentMethod': paymentMethod,
         'isPaid': isPaid,
@@ -255,6 +265,10 @@ class MasterOrder extends Equatable {
           : null,
       subtotalEgp: (map['subtotalEgp'] as num?)?.toDouble() ?? 0,
       deliveryFeeEgp: (map['deliveryFeeEgp'] as num?)?.toDouble() ?? 0,
+      serviceFeeEgp: (map['serviceFeeEgp'] as num?)?.toDouble() ?? 0,
+      serviceFeeSnapshot: map['serviceFeeSnapshot'] is Map
+          ? Map<String, dynamic>.from(map['serviceFeeSnapshot'] as Map)
+          : null,
       totalEgp: (map['totalEgp'] as num?)?.toDouble() ?? 0,
       paymentMethod: map['paymentMethod'] as String?,
       isPaid: map['isPaid'] as bool? ?? false,
@@ -303,6 +317,8 @@ class MasterOrder extends Equatable {
         driverAssignment,
         subtotalEgp,
         deliveryFeeEgp,
+        serviceFeeEgp,
+        serviceFeeSnapshot,
         totalEgp,
         paymentMethod,
         isPaid,

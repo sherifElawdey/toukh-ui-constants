@@ -25,7 +25,8 @@ abstract final class ProviderOrderStatusWire {
 
   static bool isIncoming(String wire) {
     final w = normalize(wire);
-    return w == placed || w == pending || w == quoted;
+    // Pharmacy "accept" writes `quoted` — treat like food accepted → In Progress.
+    return w == placed || w == pending;
   }
 
   static bool isInProgress(String wire) {

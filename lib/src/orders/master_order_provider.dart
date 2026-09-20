@@ -133,6 +133,24 @@ extension ProviderOrderSliceActionsX on ProviderOrderSlice {
       !isStoreDelivery &&
       hasAssignedDriver &&
       statusWire == ProviderOrderStatusWire.readyForPickup;
+
+  /// Show courier-late banner only while still awaiting pickup.
+  bool get showCourierLateWarning {
+    if (courierLateWarningAt == null) return false;
+    final w = statusWire;
+    if (w == ProviderOrderStatusWire.pickedUp ||
+        w == ProviderOrderStatusWire.outForDelivery ||
+        w == ProviderOrderStatusWire.delivered ||
+        w == ProviderOrderStatusWire.cancelled ||
+        w == ProviderOrderStatusWire.completed) {
+      return false;
+    }
+    return w == ProviderOrderStatusWire.readyForPickup ||
+        w == ProviderOrderStatusWire.courierAssigned ||
+        w == ProviderOrderStatusWire.courierRequested ||
+        w == ProviderOrderStatusWire.preparing ||
+        w == ProviderOrderStatusWire.accepted;
+  }
 }
 
 extension ProviderMasterOrderRowActionsX on ProviderMasterOrderRow {
