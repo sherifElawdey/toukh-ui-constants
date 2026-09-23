@@ -47,6 +47,7 @@ class MasterOrder extends Equatable {
     this.customerPhotoUrl,
     this.route,
     this.completionCode,
+    this.pickupCode,
     this.createdAt,
     this.updatedAt,
   });
@@ -87,6 +88,8 @@ class MasterOrder extends Equatable {
   final String? customerPhotoUrl;
   final DeliveryRouteSnapshot? route;
   final String? completionCode;
+  /// 6-digit code for driver store pickup (OTP alternative to pickup QR).
+  final String? pickupCode;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -123,6 +126,7 @@ class MasterOrder extends Equatable {
     String? customerPhone,
     String? customerPhotoUrl,
     String? completionCode,
+    String? pickupCode,
     DateTime? updatedAt,
   }) {
     return MasterOrder(
@@ -159,6 +163,7 @@ class MasterOrder extends Equatable {
       customerPhotoUrl: customerPhotoUrl ?? this.customerPhotoUrl,
       route: route,
       completionCode: completionCode ?? this.completionCode,
+      pickupCode: pickupCode ?? this.pickupCode,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -205,6 +210,7 @@ class MasterOrder extends Equatable {
         if (customerPhotoUrl != null) 'customerPhotoUrl': customerPhotoUrl,
         if (route != null) 'route': route!.toMap(),
         if (completionCode != null) 'completionCode': completionCode,
+        if (pickupCode != null) 'pickupCode': pickupCode,
         if (createdAt != null)
           'createdAt': Timestamp.fromDate(createdAt!),
         if (updatedAt != null)
@@ -295,6 +301,7 @@ class MasterOrder extends Equatable {
             )
           : null,
       completionCode: map['completionCode'] as String?,
+      pickupCode: map['pickupCode'] as String?,
       createdAt: _parseDate(map['createdAt']),
       updatedAt: _parseDate(map['updatedAt']),
     );
@@ -336,6 +343,7 @@ class MasterOrder extends Equatable {
         customerPhotoUrl,
         route,
         completionCode,
+        pickupCode,
         createdAt,
         updatedAt,
       ];
