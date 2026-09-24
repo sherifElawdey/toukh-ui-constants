@@ -25,6 +25,7 @@ class ProviderOrderSlice extends Equatable {
     this.deliveryAddress,
     this.orderPriceEgp = 0,
     this.deliveryFeeEgp = 0,
+    this.serviceFeeEgp = 0,
     this.totalEgp = 0,
     this.note,
     this.driverId,
@@ -67,6 +68,8 @@ class ProviderOrderSlice extends Equatable {
 
   final double orderPriceEgp;
   final double deliveryFeeEgp;
+  /// Pro-rata share of master service fee for this provider.
+  final double serviceFeeEgp;
   final double totalEgp;
   final String? note;
 
@@ -128,9 +131,10 @@ class ProviderOrderSlice extends Equatable {
     final deliveryFee = _double(m['deliveryPrice']) ??
         _double(m['deliveryFeeEgp']) ??
         0.0;
+    final serviceFee = _double(m['serviceFeeEgp']) ?? 0.0;
     final total = _double(m['totalEgp']) ??
         _double(m['total']) ??
-        (orderPrice + deliveryFee);
+        (orderPrice + deliveryFee + serviceFee);
 
     return ProviderOrderSlice(
       providerId: providerId,
@@ -148,6 +152,7 @@ class ProviderOrderSlice extends Equatable {
           _location(m['deliveryLocation']),
       orderPriceEgp: orderPrice,
       deliveryFeeEgp: deliveryFee,
+      serviceFeeEgp: serviceFee,
       totalEgp: total,
       note: _string(m['note']),
       driverId: _string(m['driverId']),
@@ -201,6 +206,7 @@ class ProviderOrderSlice extends Equatable {
         'orderPriceEgp': orderPriceEgp,
         'deliveryPrice': deliveryFeeEgp,
         'deliveryFeeEgp': deliveryFeeEgp,
+        'serviceFeeEgp': serviceFeeEgp,
         'totalEgp': totalEgp,
         if (note != null) 'note': note,
         if (driverId != null) 'driverId': driverId,
@@ -278,6 +284,7 @@ class ProviderOrderSlice extends Equatable {
         deliveryAddress,
         orderPriceEgp,
         deliveryFeeEgp,
+        serviceFeeEgp,
         totalEgp,
         note,
         driverId,

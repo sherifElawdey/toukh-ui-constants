@@ -14,6 +14,7 @@ class ProviderOrderRef extends Equatable {
     this.providerName,
     this.orderPriceEgp = 0,
     this.deliveryFeeEgp = 0,
+    this.serviceFeeEgp = 0,
     this.isAggregated = false,
     this.cancelledAt,
     this.cancelReason,
@@ -27,12 +28,13 @@ class ProviderOrderRef extends Equatable {
   final String? providerName;
   final double orderPriceEgp;
   final double deliveryFeeEgp;
+  final double serviceFeeEgp;
   final bool isAggregated;
   final DateTime? cancelledAt;
   final String? cancelReason;
   final OrderCancelledByRole? cancelledByRole;
 
-  double get totalEgp => orderPriceEgp + deliveryFeeEgp;
+  double get totalEgp => orderPriceEgp + deliveryFeeEgp + serviceFeeEgp;
 
   ProviderOrderRef copyWith({
     ProviderSubState? providerState,
@@ -50,6 +52,7 @@ class ProviderOrderRef extends Equatable {
       providerName: providerName,
       orderPriceEgp: orderPriceEgp,
       deliveryFeeEgp: deliveryFeeEgp ?? this.deliveryFeeEgp,
+      serviceFeeEgp: serviceFeeEgp,
       isAggregated: isAggregated,
       cancelledAt: cancelledAt ?? this.cancelledAt,
       cancelReason: cancelReason ?? this.cancelReason,
@@ -65,6 +68,7 @@ class ProviderOrderRef extends Equatable {
         if (providerName != null) 'providerName': providerName,
         'orderPriceEgp': orderPriceEgp,
         'deliveryFeeEgp': deliveryFeeEgp,
+        'serviceFeeEgp': serviceFeeEgp,
         'isAggregated': isAggregated,
         if (cancelledAt != null)
           'cancelledAt': ToukhFirestoreTimestamps.fieldFromDateTime(cancelledAt),
@@ -82,6 +86,7 @@ class ProviderOrderRef extends Equatable {
       providerName: map['providerName'] as String?,
       orderPriceEgp: (map['orderPriceEgp'] as num?)?.toDouble() ?? 0,
       deliveryFeeEgp: (map['deliveryFeeEgp'] as num?)?.toDouble() ?? 0,
+      serviceFeeEgp: (map['serviceFeeEgp'] as num?)?.toDouble() ?? 0,
       isAggregated: map['isAggregated'] as bool? ?? false,
       cancelledAt: _parseDate(map['cancelledAt']),
       cancelReason: map['cancelReason'] as String?,
@@ -101,6 +106,7 @@ class ProviderOrderRef extends Equatable {
         providerName,
         orderPriceEgp,
         deliveryFeeEgp,
+        serviceFeeEgp,
         isAggregated,
         cancelledAt,
         cancelReason,

@@ -7,6 +7,7 @@ class ProviderOrderSliceLineItem extends Equatable {
     required this.name,
     required this.quantity,
     required this.lineTotalEgp,
+    this.unitPriceEgp = 0,
     this.quantityText,
     this.description,
     this.imageUrl,
@@ -18,6 +19,7 @@ class ProviderOrderSliceLineItem extends Equatable {
   final String name;
   final int quantity;
   final double lineTotalEgp;
+  final double unitPriceEgp;
   final String? quantityText;
   final String? description;
   final String? imageUrl;
@@ -29,6 +31,15 @@ class ProviderOrderSliceLineItem extends Equatable {
       ? quantityText!.trim()
       : '$quantity';
 
+  /// Unit price for display; falls back to line ÷ qty when unset.
+  double get effectiveUnitPriceEgp {
+    if (unitPriceEgp > 0) return unitPriceEgp;
+    if (quantity > 0 && lineTotalEgp > 0) {
+      return lineTotalEgp / quantity;
+    }
+    return 0;
+  }
+
   factory ProviderOrderSliceLineItem.fromMap(Map<String, dynamic> m) {
     final name = _string(m['title']) ??
         _string(m['name']) ??
@@ -36,17 +47,23 @@ class ProviderOrderSliceLineItem extends Equatable {
         _string(m['nameDescription']) ??
         '';
     final qty = _int(m['quantity']) ?? 1;
-    final unit = _double(m['unitPrice']) ?? 0;
+    final unit = _double(m['unitPrice']) ??
+        _double(m['unitPriceEgp']) ??
+        0;
     final line = _double(m['lineTotalEgp']) ??
         _double(m['lineTotal']) ??
         _double(m['priceEgp']) ??
         (unit > 0 ? unit * qty : 0);
+    final resolvedUnit = unit > 0
+        ? unit
+        : (qty > 0 && line > 0 ? line / qty : 0.0);
     return ProviderOrderSliceLineItem(
       itemId: _string(m['itemId']) ?? _string(m['menuItemId']),
       requestItemId: _string(m['requestItemId']) ?? _string(m['id']),
       name: name,
       quantity: qty,
       lineTotalEgp: line,
+      unitPriceEgp: resolvedUnit,
       quantityText: _string(m['quantityText']),
       description: _string(m['description']) ?? _string(m['nameDescription']),
       imageUrl: _string(m['imageUrl']),
@@ -60,6 +77,7 @@ class ProviderOrderSliceLineItem extends Equatable {
         'title': name,
         'quantity': quantity,
         'lineTotalEgp': lineTotalEgp,
+        if (unitPriceEgp > 0) 'unitPrice': unitPriceEgp,
         if (quantityText != null) 'quantityText': quantityText,
         if (description != null) 'description': description,
         if (imageUrl != null) 'imageUrl': imageUrl,
@@ -90,6 +108,7 @@ class ProviderOrderSliceLineItem extends Equatable {
         name,
         quantity,
         lineTotalEgp,
+        unitPriceEgp,
         quantityText,
         description,
         imageUrl,

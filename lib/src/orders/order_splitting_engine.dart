@@ -17,6 +17,7 @@ abstract final class OrderSplittingEngine {
     required List<CartLineForSplit> lines,
     required Map<String, ProviderDeliveryConfig> providerConfigs,
     double platformFeeEgp = 0,
+    double serviceFeeEgp = 0,
     double? customerLat,
     double? customerLng,
   }) {
@@ -47,6 +48,7 @@ abstract final class OrderSplittingEngine {
             deliverableLines,
             providerConfigs,
             platformFeeEgp,
+            serviceFeeEgp: serviceFeeEgp,
             customerLat: customerLat,
             customerLng: customerLng,
           );
@@ -60,16 +62,31 @@ abstract final class OrderSplittingEngine {
       for (final p in explorePlans) p.providerId: ProviderSubState.pending,
     };
 
+    final combinedSubtotal = deliverablePlan.subtotalEgp + exploreSubtotal;
+    // Explore lines share remaining service fee pro-rata after deliverable.
+    final deliverableService = deliverablePlan.serviceFeeEgp;
+    final exploreService =
+        (serviceFeeEgp - deliverableService).clamp(0.0, serviceFeeEgp);
+    final exploreWithFees = _applyServiceFeeShares(
+      explorePlans,
+      exploreService,
+      exploreSubtotal,
+    );
+
     return OrderSplitPlan(
-      providerOrders: [...deliverablePlan.providerOrders, ...explorePlans],
+      providerOrders: [
+        ...deliverablePlan.providerOrders,
+        ...exploreWithFees,
+      ],
       aggregatedGroupId: deliverablePlan.aggregatedGroupId,
       needsDeliveryTask: deliverablePlan.needsDeliveryTask ||
           explorePlans.any((p) => p.fulfillmentMode == FulfillmentMode.courier),
-      subtotalEgp: deliverablePlan.subtotalEgp + exploreSubtotal,
+      subtotalEgp: combinedSubtotal,
       deliveryFeeEgp: deliverablePlan.deliveryFeeEgp,
-      totalEgp: deliverablePlan.subtotalEgp +
-          exploreSubtotal +
-          deliverablePlan.deliveryFeeEgp,
+      serviceFeeEgp: serviceFeeEgp,
+      totalEgp: combinedSubtotal +
+          deliverablePlan.deliveryFeeEgp +
+          serviceFeeEgp,
       initialProviderStatusMap: statusMap,
     );
   }
@@ -78,6 +95,7 @@ abstract final class OrderSplittingEngine {
     List<CartLineForSplit> lines,
     Map<String, ProviderDeliveryConfig> providerConfigs,
     double platformFeeEgp, {
+    double serviceFeeEgp = 0,
     double? customerLat,
     double? customerLng,
   }) {
@@ -151,8 +169,10 @@ abstract final class OrderSplittingEngine {
       );
     }
 
+    final withFees = _applyServiceFeeShares(plans, serviceFeeEgp, subtotal);
+
     final statusMap = {
-      for (final p in plans) p.providerId: ProviderSubState.pending,
+      for (final p in withFees) p.providerId: ProviderSubState.pending,
     };
 
     final deliveryFee = feeBreakdown.totalDeliveryFeeEgp;
@@ -160,15 +180,52 @@ abstract final class OrderSplittingEngine {
         (providerIds.length == 1 && !storeDeliveryIds.contains(providerIds.first));
 
     return OrderSplitPlan(
-      providerOrders: plans,
+      providerOrders: withFees,
       aggregatedGroupId: aggregatedGroupId,
       needsDeliveryTask:
           needsTask && courierOnlyIds.isNotEmpty || aggregatedGroupId != null,
       subtotalEgp: subtotal,
       deliveryFeeEgp: deliveryFee,
-      totalEgp: subtotal + deliveryFee,
+      serviceFeeEgp: serviceFeeEgp,
+      totalEgp: subtotal + deliveryFee + serviceFeeEgp,
       initialProviderStatusMap: statusMap,
     );
+  }
+
+  /// Distribute [serviceFeeEgp] pro-rata by [orderPriceEgp]; remainder on last.
+  static List<SplitProviderOrderPlan> _applyServiceFeeShares(
+    List<SplitProviderOrderPlan> plans,
+    double serviceFeeEgp,
+    double subtotal,
+  ) {
+    if (plans.isEmpty || serviceFeeEgp <= 0 || subtotal <= 0) return plans;
+    final shares = <double>[];
+    var assigned = 0.0;
+    for (var i = 0; i < plans.length; i++) {
+      if (i == plans.length - 1) {
+        shares.add(double.parse((serviceFeeEgp - assigned).toStringAsFixed(2)));
+      } else {
+        final share = double.parse(
+          (serviceFeeEgp * (plans[i].orderPriceEgp / subtotal))
+              .toStringAsFixed(2),
+        );
+        shares.add(share);
+        assigned += share;
+      }
+    }
+    return [
+      for (var i = 0; i < plans.length; i++)
+        SplitProviderOrderPlan(
+          providerId: plans[i].providerId,
+          lines: plans[i].lines,
+          fulfillmentMode: plans[i].fulfillmentMode,
+          isAggregated: plans[i].isAggregated,
+          orderPriceEgp: plans[i].orderPriceEgp,
+          deliveryFeeEgp: plans[i].deliveryFeeEgp,
+          serviceFeeEgp: shares[i],
+          providerName: plans[i].providerName,
+        ),
+    ];
   }
 
   static List<SplitProviderOrderPlan> _planExplore(List<CartLineForSplit> lines) {

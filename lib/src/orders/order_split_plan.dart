@@ -11,6 +11,7 @@ class SplitProviderOrderPlan extends Equatable {
     required this.isAggregated,
     required this.orderPriceEgp,
     required this.deliveryFeeEgp,
+    this.serviceFeeEgp = 0,
     this.providerName,
   });
 
@@ -20,11 +21,19 @@ class SplitProviderOrderPlan extends Equatable {
   final bool isAggregated;
   final double orderPriceEgp;
   final double deliveryFeeEgp;
+  final double serviceFeeEgp;
   final String? providerName;
 
   @override
-  List<Object?> get props =>
-      [providerId, lines, fulfillmentMode, isAggregated, orderPriceEgp, deliveryFeeEgp];
+  List<Object?> get props => [
+        providerId,
+        lines,
+        fulfillmentMode,
+        isAggregated,
+        orderPriceEgp,
+        deliveryFeeEgp,
+        serviceFeeEgp,
+      ];
 }
 
 class OrderSplitPlan extends Equatable {
@@ -35,6 +44,7 @@ class OrderSplitPlan extends Equatable {
     required this.subtotalEgp,
     required this.deliveryFeeEgp,
     required this.totalEgp,
+    this.serviceFeeEgp = 0,
     this.initialProviderStatusMap = const {},
   });
 
@@ -44,6 +54,7 @@ class OrderSplitPlan extends Equatable {
   final double subtotalEgp;
   final double deliveryFeeEgp;
   final double totalEgp;
+  final double serviceFeeEgp;
   final Map<String, ProviderSubState> initialProviderStatusMap;
 
   @override
@@ -54,6 +65,7 @@ class OrderSplitPlan extends Equatable {
         subtotalEgp,
         deliveryFeeEgp,
         totalEgp,
+        serviceFeeEgp,
         initialProviderStatusMap,
       ];
 }
