@@ -16,7 +16,6 @@ import 'toukh_notification.dart';
 import 'toukh_fcm_data_keys.dart';
 import 'toukh_notification_mapper.dart';
 import 'toukh_notification_recipient.dart';
-import 'toukh_order_notification_types.dart';
 import 'toukh_push_config.dart';
 import 'toukh_visit_reminder_scheduler.dart';
 
@@ -82,11 +81,25 @@ class ToukhPushMessaging {
         description: ToukhPushConfig.androidChannelDescription,
         importance: Importance.high,
       );
-      await plugin
+      const orderChannel = AndroidNotificationChannel(
+        ToukhPushConfig.orderAlertsChannelId,
+        ToukhPushConfig.orderAlertsChannelName,
+        description: ToukhPushConfig.orderAlertsChannelDescription,
+        importance: Importance.max,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound(
+          ToukhPushConfig.androidSoundResource,
+        ),
+      );
+      final androidPlugin = plugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(channel);
+              AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.createNotificationChannel(channel);
+      await androidPlugin?.createNotificationChannel(orderChannel);
     }
+
+    final type = message.data[ToukhFcmDataKeys.type]?.toString();
+    final orderAlert = ToukhPushConfig.isOrderAlertType(type);
 
     await plugin.show(
       message.hashCode,
@@ -94,12 +107,25 @@ class ToukhPushMessaging {
       body,
       NotificationDetails(
         android: AndroidNotificationDetails(
-          ToukhPushConfig.androidChannelId,
-          ToukhPushConfig.androidChannelName,
-          importance: Importance.high,
+          orderAlert
+              ? ToukhPushConfig.orderAlertsChannelId
+              : ToukhPushConfig.androidChannelId,
+          orderAlert
+              ? ToukhPushConfig.orderAlertsChannelName
+              : ToukhPushConfig.androidChannelName,
+          importance: orderAlert ? Importance.max : Importance.high,
           priority: Priority.high,
+          playSound: true,
+          sound: orderAlert
+              ? const RawResourceAndroidNotificationSound(
+                  ToukhPushConfig.androidSoundResource,
+                )
+              : null,
         ),
-        iOS: const DarwinNotificationDetails(),
+        iOS: DarwinNotificationDetails(
+          presentSound: true,
+          sound: orderAlert ? ToukhPushConfig.iosSoundFileName : null,
+        ),
       ),
       payload: jsonEncode(message.data),
     );
@@ -154,10 +180,21 @@ class ToukhPushMessaging {
         description: ToukhPushConfig.androidChannelDescription,
         importance: Importance.high,
       );
-      await _local
+      const orderChannel = AndroidNotificationChannel(
+        ToukhPushConfig.orderAlertsChannelId,
+        ToukhPushConfig.orderAlertsChannelName,
+        description: ToukhPushConfig.orderAlertsChannelDescription,
+        importance: Importance.max,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound(
+          ToukhPushConfig.androidSoundResource,
+        ),
+      );
+      final androidPlugin = _local
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(channel);
+              AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.createNotificationChannel(channel);
+      await androidPlugin?.createNotificationChannel(orderChannel);
     }
 
     await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
@@ -370,7 +407,11 @@ class ToukhPushMessaging {
 
     final imageUrl = _resolveImageUrl(message);
     final fcmPayload = _encodeTapPayload(message);
-    final details = await _buildForegroundNotificationDetails(imageUrl);
+    final type = data[ToukhFcmDataKeys.type]?.toString() ?? parsed?.type;
+    final details = await _buildForegroundNotificationDetails(
+      imageUrl,
+      type: type,
+    );
 
     await _local.show(
       message.hashCode,
@@ -449,22 +490,36 @@ class ToukhPushMessaging {
   }
 
   Future<NotificationDetails> _buildForegroundNotificationDetails(
-    String? imageUrl,
-  ) async {
+    String? imageUrl, {
+    String? type,
+  }) async {
+    final orderAlert = ToukhPushConfig.isOrderAlertType(type);
     if (imageUrl == null || imageUrl.isEmpty || kIsWeb) {
-      return _defaultNotificationDetails();
+      return _defaultNotificationDetails(orderAlert: orderAlert);
     }
 
     final imageFile = await _downloadNotificationImage(imageUrl);
-    if (imageFile == null) return _defaultNotificationDetails();
+    if (imageFile == null) {
+      return _defaultNotificationDetails(orderAlert: orderAlert);
+    }
 
     if (defaultTargetPlatform == TargetPlatform.android) {
       return NotificationDetails(
         android: AndroidNotificationDetails(
-          ToukhPushConfig.androidChannelId,
-          ToukhPushConfig.androidChannelName,
-          importance: Importance.high,
+          orderAlert
+              ? ToukhPushConfig.orderAlertsChannelId
+              : ToukhPushConfig.androidChannelId,
+          orderAlert
+              ? ToukhPushConfig.orderAlertsChannelName
+              : ToukhPushConfig.androidChannelName,
+          importance: orderAlert ? Importance.max : Importance.high,
           priority: Priority.high,
+          playSound: true,
+          sound: orderAlert
+              ? const RawResourceAndroidNotificationSound(
+                  ToukhPushConfig.androidSoundResource,
+                )
+              : null,
           styleInformation: BigPictureStyleInformation(
             FilePathAndroidBitmap(imageFile.path),
             hideExpandedLargeIcon: true,
@@ -476,12 +531,14 @@ class ToukhPushMessaging {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       return NotificationDetails(
         iOS: DarwinNotificationDetails(
+          presentSound: true,
+          sound: orderAlert ? ToukhPushConfig.iosSoundFileName : null,
           attachments: [DarwinNotificationAttachment(imageFile.path)],
         ),
       );
     }
 
-    return _defaultNotificationDetails();
+    return _defaultNotificationDetails(orderAlert: orderAlert);
   }
 
   Future<File?> _downloadNotificationImage(String imageUrl) async {
@@ -499,15 +556,28 @@ class ToukhPushMessaging {
     }
   }
 
-  NotificationDetails _defaultNotificationDetails() {
+  NotificationDetails _defaultNotificationDetails({bool orderAlert = false}) {
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        ToukhPushConfig.androidChannelId,
-        ToukhPushConfig.androidChannelName,
-        importance: Importance.high,
+        orderAlert
+            ? ToukhPushConfig.orderAlertsChannelId
+            : ToukhPushConfig.androidChannelId,
+        orderAlert
+            ? ToukhPushConfig.orderAlertsChannelName
+            : ToukhPushConfig.androidChannelName,
+        importance: orderAlert ? Importance.max : Importance.high,
         priority: Priority.high,
+        playSound: true,
+        sound: orderAlert
+            ? const RawResourceAndroidNotificationSound(
+                ToukhPushConfig.androidSoundResource,
+              )
+            : null,
       ),
-      iOS: const DarwinNotificationDetails(),
+      iOS: DarwinNotificationDetails(
+        presentSound: true,
+        sound: orderAlert ? ToukhPushConfig.iosSoundFileName : null,
+      ),
     );
   }
 

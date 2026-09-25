@@ -92,6 +92,7 @@ export 'src/notifications/toukh_notification_mapper.dart';
 export 'src/notifications/toukh_notification_paths.dart';
 export 'src/notifications/toukh_notification_recipient.dart';
 export 'src/notifications/toukh_notification_routes.dart';
+export 'src/notifications/toukh_notify_sound.dart';
 export 'src/notifications/toukh_order_notification_types.dart';
 export 'src/notifications/toukh_push_bootstrap.dart';
 export 'src/notifications/toukh_push_config.dart';
