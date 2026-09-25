@@ -52,4 +52,5 @@ flutter:
     - assets/branding/havit_icon.png
     - assets/sections/
     - assets/loaders/
+    - assets/sound/notify.wav
     - assets/placeholders/
