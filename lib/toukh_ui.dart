@@ -139,3 +139,5 @@ export 'src/maps/toukh_map_styles.dart';
 export 'src/maps/toukh_maps_bootstrap.dart';
 export 'src/maps/toukh_maps_web_ready.dart';
 export 'src/l10n/toukh_status_keys.dart';
+export 'src/restaurants/restaurant_cuisine_taxonomy.dart';
+export 'src/restaurants/cuisine_tags_picker.dart';
